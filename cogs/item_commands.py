@@ -1,14 +1,14 @@
 import asyncio
 import datetime
-import sqlite3
 import random
 import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType, CommandOnCooldown
 
 import config
+from helperfunctions import get_db_connection
 
-db = sqlite3.connect("./economy.db")
+db= get_db_connection()
 cursor = db.cursor()
 
 

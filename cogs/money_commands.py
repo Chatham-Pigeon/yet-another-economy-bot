@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import sqlite3
 
 import discord
 from discord.ext import commands
@@ -9,9 +8,9 @@ import random
 from discord.ui import Button, View
 
 import config
-from helperfunctions import isadmin, SQL_EXECUTE
+from helperfunctions import isadmin, SQL_EXECUTE, get_db_connection
 
-db = sqlite3.connect("./economy.db")
+db= get_db_connection()
 cursor = db.cursor()
 
 

@@ -115,3 +115,11 @@ async def send_log(ctx, info=None):
         content = content + f"Extra Info: {info}"
     await ctx.bot.get_channel(config.CHANNEL_LOG).send(
         content=content)
+
+import mysql.connector
+from DISCORD_TOKEN import database
+
+def get_db_connection():
+    """Establish and return a database connection."""
+    db = mysql.connector.connect(**database)
+    return db

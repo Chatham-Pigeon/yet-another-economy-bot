@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import sqlite3
 import random
 from datetime import timedelta
 from os import times
@@ -13,7 +12,7 @@ from discord.ext.commands import BucketType
 from discord.ui import Button, View
 
 import config
-from helperfunctions import isadmin, SQL_EXECUTE, send_log
+from helperfunctions import isadmin, SQL_EXECUTE, send_log, get_db_connection
 from cogs.item_commands import itemcommands
 intents = discord.Intents.default()
 intents.message_content = True
@@ -21,7 +20,7 @@ intents.messages = True
 intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
-db = sqlite3.connect("economy.db")
+db= get_db_connection()
 cursor = db.cursor()
 db.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT)")
 db.execute("CREATE TABLE IF NOT EXISTS USERDATA(userID INT, walletAmt INT, bankAmt INT, bankMax INT, boughtItems STRING, currentXP INT, userLevel INT)")

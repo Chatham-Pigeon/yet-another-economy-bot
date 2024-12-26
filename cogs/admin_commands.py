@@ -1,12 +1,11 @@
 import datetime
-import sqlite3
 
 import discord
 from discord.ext import commands
 import config
-from helperfunctions import isadmin, SQL_EXECUTE, dointerest
+from helperfunctions import isadmin, SQL_EXECUTE, dointerest, get_db_connection
 
-db = sqlite3.connect("./economy.db")
+db= get_db_connection()
 cursor = db.cursor()
 
 class admincommands(commands.Cog):
