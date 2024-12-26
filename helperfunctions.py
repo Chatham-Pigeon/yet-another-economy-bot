@@ -1,6 +1,11 @@
 import discord
+import mysql
+from mysql.connector import Error
+
 import config
 import sqlite3
+
+from DISCORD_TOKEN import dbinfo
 
 db = sqlite3.connect("./economy.db")
 cursor = db.cursor()
@@ -13,7 +18,7 @@ async def isadmin(ctx):
         return False
 
 
-#  cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (betamt, ctx.author.id))
+#  cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (betamt, ctx.author.id))
 async def SQL_EXECUTE(action, table, values=None, conditions=None):
     """
     action = UPDATE, INSERT, DELETE, SELECT
@@ -115,11 +120,43 @@ async def send_log(ctx, info=None):
         content = content + f"Extra Info: {info}"
     await ctx.bot.get_channel(config.CHANNEL_LOG).send(
         content=content)
+def create_database_connection():
+    try:
+        # MySQL Connection
+        db_connection = mysql.connector.pooling.connect()
 
-import mysql.connector
-from DISCORD_TOKEN import database
+        if db_connection.is_connected():
+            print("Connection to MySQL database was successful!")
+            return db_connection
+        else:
+            print("Failed to establish a connection to the database.")
+            return None
+    except Error as e:
+        print(f"Error while connecting to MySQL: {e}")
+        return None
+
 
 def get_db_connection():
-    """Establish and return a database connection."""
-    db = mysql.connector.connect(**database)
-    return db
+    try:
+        # MySQL Connection
+        db_connection = mysql.connector.pooling.connect(**dbinfo)
+
+        if db_connection.is_connected():
+            print("Connection to MySQL database was successful!")
+            return db_connection
+        else:
+            print("Failed to establish a connection to the database.")
+            return None
+    except Error as e:
+        print(f"Error while connecting to MySQL: {e}")
+        return None
+
+database = get_db_connection()
+
+if database:
+    # Only initialize the cursor if the connection is valid
+    cursor = database.cursor()
+    # Perform operations like cursor.execute() here
+else:
+    cursor = None
+    print("Cursor initialization failed due to database connection issues.")

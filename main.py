@@ -20,11 +20,12 @@ intents.messages = True
 intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
-db= get_db_connection()
+db = get_db_connection()
 cursor = db.cursor()
-db.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT)")
-db.execute("CREATE TABLE IF NOT EXISTS USERDATA(userID INT, walletAmt INT, bankAmt INT, bankMax INT, boughtItems STRING, currentXP INT, userLevel INT)")
-db.execute("CREATE TABLE IF NOT EXISTS SHOPITEMS(displayname STRING, itemid STRING, cost INT, description STRING, emoji STRING)")
+cursor.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS USERDATA(userID BIGINT, walletAmt INT, bankAmt INT, bankMax INT, boughtItems varchar(255), currentXP INT, userLevel INT)")
+cursor.execute("CREATE TABLE IF NOT EXISTS SHOPITEMS(displayname varchar(255), itemid varchar(255), cost INT, description varchar(255), emoji varchar(255))")
+db.commit()
 useitem = itemcommands(bot)
 
 user_level_xp_cooldown = {}
@@ -120,7 +121,7 @@ async def triedcrime(ctx):
 
     elif r == 100:
         await ctx.reply("BRO YOU TRIED TO ROB AN UNDERCOVER COP \n HE ARRESTED YOU AND YOU LOST HALF UR BANK BALANCE LMFAOO")
-        cursor.execute("UPDATE USERDATA SET bankAmt = bankAmt / 2 WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("UPDATE USERDATA SET bankAmt = bankAmt / 2 WHERE userID = %s", (ctx.author.id,))
         db.commit()
 
 
@@ -141,7 +142,7 @@ async def rob(ctx, user):
         return
 
     # grab authors data
-    cursor.execute("SELECT walletAmt, boughtItems FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+    cursor.execute("SELECT walletAmt, boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
     user_data = cursor.fetchone()
     if not user_data:
         await ctx.reply("User data not found.")
@@ -152,24 +153,24 @@ async def rob(ctx, user):
         if wallet >= 25:
             if random.randint(1, 100) <= 50 or await isadmin(ctx):
                 # success
-                cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (victim.id,))
+                cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (victim.id,))
                 victimwallet = cursor.fetchone()[0]
                 halfvictimwallet = victimwallet // 2
                 coinsStolen = random.randint(1, halfvictimwallet)
-                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (coinsStolen, ctx.author.id))
+                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (coinsStolen, ctx.author.id))
                 db.commit()
-                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (coinsStolen, victim.id))
+                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (coinsStolen, victim.id))
                 db.commit()
                 await ctx.reply(f"Good Job! {victim.name} was so scared of your gun they dropped {coinsStolen} coins and ran away!")
             else:
                 #fail
                 coinsStolen = random.randint(1, 10)
-                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (coinsStolen, ctx.author.id))
+                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (coinsStolen, ctx.author.id))
                 db.commit()
-                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (coinsStolen, victim.id))
+                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (coinsStolen, victim.id))
                 db.commit()
                 boughtitems = boughtitems.replace("gun", "")
-                cursor.execute("UPDATE USERDATA SET boughtItems = ? WHERE userID = ?", (boughtitems, ctx.author.id))
+                cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (boughtitems, ctx.author.id))
                 db.commit()
                 await ctx.reply(f"You failed to rob them and shot yourself in the face... They stole {coinsStolen} coins from your wallet while you were unconscious.")
         else:
@@ -220,25 +221,25 @@ async def on_command_completion(ctx):
         cdstamp = datetime.datetime.now()
         user_level_xp_cooldown[ctx.author.id] = cdstamp
         xpGain = random.randint(1, 10)
-        cursor.execute("SELECT currentXP, userLevel FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT currentXP, userLevel FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         currentXP, userLevel = user_data
         currentXP = currentXP + xpGain
         await ctx.message.add_reaction("✨")
-        cursor.execute("UPDATE USERDATA SET currentXP = currentXP + ? WHERE userID = ?", (xpGain, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET currentXP = currentXP + %s WHERE userID = %s", (xpGain, ctx.author.id))
         db.commit()
         if currentXP >= userLevel * 100:
-            cursor.execute("UPDATE USERDATA SET userLevel = userLevel + 1 WHERE userID = ?", (ctx.author.id,))
+            cursor.execute("UPDATE USERDATA SET userLevel = userLevel + 1 WHERE userID = %s", (ctx.author.id,))
             db.commit()
             await ctx.reply(f"Congratulations {ctx.author.display_name}! You have reached level {userLevel + 1}!")
-            cursor.execute("UPDATE USERDATA SET bankMax = bankMax + 1000 WHERE userID = ?", (ctx.author.id,))
+            cursor.execute("UPDATE USERDATA SET bankMax = bankMax + 1000 WHERE userID = %s", (ctx.author.id,))
             db.commit()
-            cursor.execute("UPDATE USERDATA SET currentXP = 0 WHERE userID = ?", (ctx.author.id,))
+            cursor.execute("UPDATE USERDATA SET currentXP = 0 WHERE userID = %s", (ctx.author.id,))
             db.commit()
 
 @bot.command(help="Check your XP and Level")
 async def level(ctx):
-    cursor.execute("SELECT currentXP, userLevel FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+    cursor.execute("SELECT currentXP, userLevel FROM USERDATA WHERE userID = %s", (ctx.author.id,))
     user_data = cursor.fetchone()
     currentXP, userlevel = user_data
     maxXP = userlevel * 100
@@ -264,11 +265,11 @@ async def on_member_update(before, after):
     role_timeout = after.guild.get_role(config.ROLE_TIMEOUT)  # Retrieve the role using its ID
     if role_timeout in after.roles and role_timeout not in before.roles:
         # User just got the ROLE_TIMECOUNT role
-        cursor.execute("UPDATE USERDATA SET inTimeout = ? WHERE userID = ?", (True, after.id))
+        cursor.execute("UPDATE USERDATA SET inTimeout = %s WHERE userID = %s", (True, after.id))
         db.commit()
     elif role_timeout not in after.roles and role_timeout in before.roles:
         # User just lost the ROLE_TIMECOUNT role
-        cursor.execute("UPDATE USERDATA SET inTimeout = ? WHERE userID = ?", (False, after.id))
+        cursor.execute("UPDATE USERDATA SET inTimeout = %s WHERE userID = %s", (False, after.id))
         db.commit()
 
 
@@ -282,7 +283,7 @@ async def on_member_join(member):
         return  # Ensure the role config exists before proceeding
 
     role_timeout = member.guild.get_role(config.ROLE_TIMEOUT)  # Retrieve the timeout role using its ID
-    cursor.execute("SELECT inTimeout FROM USERDATA WHERE userID = ?", (member.id,))
+    cursor.execute("SELECT inTimeout FROM USERDATA WHERE userID = %s", (member.id,))
     user_data = cursor.fetchone()
 
     if user_data and user_data[0]:  # Check if `inTimeout` is true
@@ -302,15 +303,14 @@ async def on_message(message):
 
 @bot.check
 async def initUser(ctx):
-    cursor.execute("SELECT * FROM userData WHERE userID = ?", (ctx.author.id,))
+    cursor.execute("SELECT * FROM USERDATA WHERE userID = %s", (ctx.author.id,))
     user = cursor.fetchone()
     if not user:
         embed = discord.Embed(title="Welcome!", description="Hi! Welcome to a general purpose economy bot,\nAll your data should be initalised :3 have fun!")
         await ctx.send(embed=embed)
         # Insert default values for the user
         try:
-            cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                   (ctx.author.id, 0, 0, 1000, "", 0, 1))
+            cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ctx.author.id, 0, 0, 1000, "", 0, 1))
             db.commit()
         except Exception as e:
             await ctx.reply(e)

@@ -37,7 +37,7 @@ class moneycommands(commands.Cog):
             user = ctx.author
 
         # Fetch user data
-        cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM userData WHERE userID = %s", (user.id,))
+        cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = %s", (user.id,))
         user_data = cursor.fetchone()
 
         try:
@@ -347,7 +347,7 @@ class moneycommands(commands.Cog):
             return
         cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s where userID = %s ", (amt, user.id))
         db.commit()
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s where userID = ? ", (amt, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s where userID = %s ", (amt, ctx.author.id))
         db.commit()
         await ctx.reply(f"You paid {user.display_name} {amt} coins!")
 
@@ -382,7 +382,7 @@ class moneycommands(commands.Cog):
                     content=f"You clicked a bomb! Game over. You lost your bet of {betAmt} coins.",
                     view=None
                 )
-                cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + ?", (betAmt,))
+                cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + %s", (betAmt,))
                 db.commit()
                 return
 
@@ -394,8 +394,8 @@ class moneycommands(commands.Cog):
             if len(revealed) == 7:  # All good tiles revealed
                 is_game_over = True
                 winnings = betAmt * 2
-                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?",(winnings + betAmt, ctx.author.id))
-                cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - ?", (winnings + betAmt,))
+                cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s",(winnings + betAmt, ctx.author.id))
+                cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings + betAmt,))
 
                 await interaction.response.edit_message(
                     content=f"Congratulations! You revealed all safe tiles and won {winnings} coins!",
@@ -420,8 +420,8 @@ class moneycommands(commands.Cog):
 
             is_game_over = True
             winnings = betAmt * profit
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (winnings + betAmt, ctx.author.id))
-            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - ?", (winnings,))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (winnings + betAmt, ctx.author.id))
+            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings,))
             db.commit()
             await interaction.response.edit_message(
                 content=f"You exited the game early! Your winnings are {winnings:.1f} coins.",
@@ -441,7 +441,7 @@ class moneycommands(commands.Cog):
 
             return
 
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if not user_data or user_data[0] < betAmt:
             await ctx.reply("You don't have enough coins in your wallet for this bet.")
@@ -454,7 +454,7 @@ class moneycommands(commands.Cog):
             self.mines.reset_cooldown(ctx)
             return
 
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (betAmt, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (betAmt, ctx.author.id))
         db.commit()
 
         tiles = [Button(style=discord.ButtonStyle.primary, label="?", custom_id=f"tile_{i}") for i in range(9)]
@@ -502,21 +502,21 @@ class moneycommands(commands.Cog):
     @commands.command(help="Donates money to the casino.")
     async def donate(self, ctx, amt):
         if not amt is None:
-            cursor.execute("SELECT walletAmt from USERDATA WHERE userID = ? ", (ctx.author.id,))
+            cursor.execute("SELECT walletAmt from USERDATA WHERE userID = %s ", (ctx.author.id,))
             user_data = cursor.fetchone()
             if user_data[0] < int(amt):
                 await ctx.reply("You don't have enough coins in your wallet for this donation.")
                 return
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (int(amt), ctx.author.id))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (int(amt), ctx.author.id))
             db.commit()
             await ctx.reply(f"You have donated {amt} coins to the casino!")
-            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + ?", (int(amt),))
+            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + %s", (int(amt),))
             db.commit()
 
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx, user, amt):
         # too lazy to continue this too hard :(
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if user_data[0] < amt:
             await ctx.reply("You don't have enough money in your wallet for this.")
