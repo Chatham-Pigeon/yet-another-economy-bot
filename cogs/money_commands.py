@@ -38,7 +38,7 @@ class moneycommands(commands.Cog):
             user = ctx.author
 
         # Fetch user data
-        cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM userData WHERE userID = ?", (user.id,))
+        cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM userData WHERE userID = %s", (user.id,))
         user_data = cursor.fetchone()
 
         try:
@@ -61,7 +61,7 @@ class moneycommands(commands.Cog):
     async def deposit(self, ctx, depositamt):
         try:
             # Fetch user data
-            cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+            cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = %s", (ctx.author.id,))
             user_data = cursor.fetchone()
 
             if not user_data:
@@ -93,7 +93,7 @@ class moneycommands(commands.Cog):
                 return
 
             # Perform the deposit
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ?, bankAmt = bankAmt + ? WHERE userID = ?",
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s, bankAmt = bankAmt + %s WHERE userID = %s",
                            (depositamt, depositamt, ctx.author.id))
             db.commit()
             await ctx.reply(f"You have successfully deposited {depositamt} coins into your bank!")
@@ -105,7 +105,7 @@ class moneycommands(commands.Cog):
     async def withdraw(self, ctx, amt):
         try:
             # Fetch user data
-            cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+            cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = %s", (ctx.author.id,))
             user_data = cursor.fetchone()
 
             if not user_data:
@@ -133,7 +133,7 @@ class moneycommands(commands.Cog):
                 await ctx.reply("You don't have enough coins in your bank to withdraw that amount!")
                 return
 
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ?, bankAmt = bankAmt - ? WHERE userID = ?",
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s, bankAmt = bankAmt - %s WHERE userID = %s",
                            (amt, amt, ctx.author.id))
             db.commit()
             await ctx.reply(f"You have successfully withdrawn {amt} coins from your bank!")
@@ -160,7 +160,7 @@ class moneycommands(commands.Cog):
             self.coinflip.reset_cooldown(ctx)
             return
 
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if user_data[0] < betamt:
             await ctx.reply("You don't have enough coins in your wallet for this bet.")
@@ -170,14 +170,14 @@ class moneycommands(commands.Cog):
         if casinoMoney < 200:
             winChance = 25
         if randomnum < winChance or isadmin(ctx):
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (betamt / 4, ctx.author.id))
-            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - ?", (betamt / 4,))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (betamt / 4, ctx.author.id))
+            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (betamt / 4,))
             db.commit()
             await ctx.reply(f"You won {betamt / 4} coins!")
             await self.bot.get_channel(config.CHANNEL_LOG).send(content=f"<@{ctx.author.id}> **won** a bet with a value of `{randomnum}`")
         else:
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (betamt, ctx.author.id))
-            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + ?", (betamt,))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (betamt, ctx.author.id))
+            cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + %s", (betamt,))
             db.commit()
             await ctx.reply(f"You lost {betamt} coins!")
             await self.bot.get_channel(config.CHANNEL_LOG).send(content=f"<@{ctx.author.id}> **lost** a bet with a value of `{randomnum}`")
@@ -197,14 +197,14 @@ class moneycommands(commands.Cog):
             return
 
         # Fetch user data
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if not user_data or user_data[0] < betamt:
             await ctx.reply("You don't have enough coins in your wallet for this bet.")
             self.blackjack.reset_cooldown(ctx)
             return
 
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?",(betamt, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s",(betamt, ctx.author.id))
         db.commit()
 
         def calculate_hand_value(hand):
@@ -253,7 +253,7 @@ class moneycommands(commands.Cog):
                         view=None
                     )
                     await ctx.reply("You lost the bet. Be more careful next time!")
-                    cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + ?", (betamt,))
+                    cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + %s", (betamt,))
                     db.commit()
                     return
 
@@ -274,18 +274,18 @@ class moneycommands(commands.Cog):
 
                 if dealer_value > 21 or player_value > dealer_value:
                     result = "You won!"
-                    cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (betamt * 1.5, ctx.author.id))
+                    cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (betamt * 1.5, ctx.author.id))
                     db.commit()
-                    cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - ?", (betamt * 1.5,))
+                    cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (betamt * 1.5,))
                     db.commit()
                 elif player_value < dealer_value:
                     result = "You lost!"
-                    cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + ?", (betamt,))
+                    cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot + %s", (betamt,))
                     db.commit()
 
                 else:
                     result = "It's a draw!"
-                    cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (betamt, ctx.author.id))
+                    cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (betamt, ctx.author.id))
                     db.commit()
 
                 await interaction.response.edit_message(
@@ -304,10 +304,10 @@ class moneycommands(commands.Cog):
 
         if calculate_hand_value(player_hand) == 21:
             await ctx.reply(f"Blackjack! You won!")
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?",
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s",
                            (betamt * 1.5, ctx.author.id))
             db.commit()
-            cursor.execute("UPDATE GLOBALVARIABLE SET casinoPot = casinoPot - ?", (betamt * 1.5,))
+            cursor.execute("UPDATE GLOBALVARIABLE SET casinoPot = casinoPot - %s", (betamt * 1.5,))
             return
 
         hit_button = Button(label="Hit", style=discord.ButtonStyle.green, custom_id="hit")
@@ -341,14 +341,14 @@ class moneycommands(commands.Cog):
             await ctx.reply("you can't donate less than 1 coin")
             return
 
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if user_data[0] < amt:
             await ctx.reply("you can't give that much ur too poor")
             return
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? where userID = ? ", (amt, user.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s where userID = %s ", (amt, user.id))
         db.commit()
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? where userID = ? ", (amt, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s where userID = ? ", (amt, ctx.author.id))
         db.commit()
         await ctx.reply(f"You paid {user.display_name} {amt} coins!")
 

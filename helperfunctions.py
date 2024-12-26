@@ -106,7 +106,7 @@ async def dointerest(ctx):
             interest = bankAmt * 0.02
             bankAmt += interest
             bankAmt = round(bankAmt)
-            cursor.execute("UPDATE USERDATA SET bankAmt = ? WHERE userID = ?", (bankAmt, userID))
+            cursor.execute("UPDATE USERDATA SET bankAmt = %s WHERE userID = %s", (bankAmt, userID))
             db.commit()
 
 async def send_log(ctx, info=None):

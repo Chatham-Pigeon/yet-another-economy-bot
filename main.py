@@ -49,7 +49,7 @@ async def work(ctx):
             coinsEarned = random.randint(30, 90)
             await interaction.response.edit_message(content=f"Good Work! You earned {coinsEarned} at your job.", view=None)
             await SQL_EXECUTE('UPDATE', 'USERDATA', {'walletAmt': f'walletAmt = walletAmt + {coinsEarned}'}, {'userID': f'{ctx.author.id}'} )
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (coinsEarned, ctx.author.id))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (coinsEarned, ctx.author.id))
             db.commit()
         else:
             await interaction.response.edit_message(content=f"Dude what? How'd you fuck that up. The customer left and your employer hates you. \nYou earned no money for this shift.", view=None)
@@ -78,13 +78,13 @@ async def search(ctx):
         #sucess
         coinsFound = random.randint(15, 30)
         await ctx.reply(f"You found {coinsFound} coins on the ground!")
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (coinsFound, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (coinsFound, ctx.author.id))
         db.commit()
     elif rnum == 100:
         await ctx.reply(f"You searched a bit too hard and fell into the sewers under your bank. The police found you and confiscated half your money.")
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         walletAmt = cursor.fetchone()[0] / 2
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (walletAmt, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (walletAmt, ctx.author.id))
         db.commit()
     elif rnum <= 84:
         # fail dont lose money
@@ -93,7 +93,7 @@ async def search(ctx):
         #fail lose money
         coinsLost = random.randint(15, 30)
         await ctx.reply(f"You ended up losing {coinsLost} coins while searching.. ")
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (coinsLost, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (coinsLost, ctx.author.id))
         db.commit()
 
 @bot.command(help="Commit Crimes for money")
@@ -110,13 +110,13 @@ async def triedcrime(ctx):
     coinsEarned = random.randint(120, 175)
     if 1 <= r <= 25:
         await ctx.reply(f"You sucessfully robbed that old lady, damn... She dropped {coinsEarned} coins though..")
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAMt + ? WHERE userID = ?", (coinsEarned, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAMt + %s WHERE userID = %s", (coinsEarned, ctx.author.id))
         db.commit()
     elif 26 <= r <= 75:
         await ctx.reply("You tried to mug someone, but they ran away too fast....")
     elif 76 <= r <= 99:
         await ctx.reply(f"As you attempted to pickpocket this guy, you realize he is much stronger than you... HE stole {coinsEarned} coins from you")
-        cursor.execute("UPDATE USERDATA SET walletAmt = walletAMt - ? WHERE userID = ?", (coinsEarned, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET walletAmt = walletAMt - %s WHERE userID = %s", (coinsEarned, ctx.author.id))
         db.commit()
 
     elif r == 100:

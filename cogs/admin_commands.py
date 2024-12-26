@@ -31,11 +31,11 @@ class admincommands(commands.Cog):
     async def additem(self, ctx, displayname, itemid, cost, description, emoji):
 
         if displayname and itemid and cost and description and emoji:
-            cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = ?", (itemid,))
+            cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemid,))
             if cursor.fetchone():
                 await ctx.reply("Item with that ID already exists.")
                 return
-            cursor.execute("INSERT INTO SHOPITEMS(displayname, itemid, cost, description, emoji) VALUES (?, ?, ?, ?, ?)", (displayname, itemid, int(cost), description, emoji))
+            cursor.execute("INSERT INTO SHOPITEMS(displayname, itemid, cost, description, emoji) VALUES (%s, %s, %s, %s, %s)", (displayname, itemid, int(cost), description, emoji))
             db.commit()
             embed = discord.Embed(title="Item Added!",
                               colour=0x00b0f4,
@@ -56,7 +56,7 @@ class admincommands(commands.Cog):
     @commands.check(isadmin)
     async def setitemcost(self, ctx, itemid, cost):
         if itemid and cost:
-            cursor.execute("UPDATE SHOPITEMS SET cost = ? WHERE itemid = ?", (cost, itemid))
+            cursor.execute("UPDATE SHOPITEMS SET cost = %s WHERE itemid = %s", (cost, itemid))
             db.commit()
             await ctx.reply(f"Successfully set cost of item with ID `{itemid}` to `{cost}`!")
 
@@ -82,7 +82,7 @@ class admincommands(commands.Cog):
 
         # Fetch the recipient's user data
         try:
-            cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (user.id,))
+            cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (user.id,))
             user_data = cursor.fetchone()
 
             if not user_data:
@@ -90,7 +90,7 @@ class admincommands(commands.Cog):
                 return
 
             # Update the recipient's wallet
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + ? WHERE userID = ?", (amt, user.id))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (amt, user.id))
             db.commit()
             await ctx.reply(f"Successfully given {amt} coins to {user.display_name}!")
 
@@ -111,14 +111,14 @@ class admincommands(commands.Cog):
         for amt in bankdata:
             newamt = round(amt[0], 0)
             ctx.reply(f'newamt + bankdata[1]')
-            cursor.execute("UPDATE USERDATA SET bankAmt = ? WHERE userID = ?", (newamt, amt[1]))
+            cursor.execute("UPDATE USERDATA SET bankAmt = %s WHERE userID = %s", (newamt, amt[1]))
             db.commit()
         cursor.execute("SELECT walletAmt, userID FROM USERDATA")
         bankdata = cursor.fetchall()
         for amt in bankdata:
             newamt = round(amt[0], 0)
             ctx.reply(f'newamt + bankdata[1]')
-            cursor.execute("UPDATE USERDATA SET walletAmt = ? WHERE userID = ?", (newamt, amt[1]))
+            cursor.execute("UPDATE USERDATA SET walletAmt = %s WHERE userID = %s", (newamt, amt[1]))
             db.commit()
 
     @commands.command(hidden=True)
@@ -129,16 +129,14 @@ class admincommands(commands.Cog):
     @commands.command(aliases=['casino'], hidden=True)
     @commands.check(isadmin)
     async def set_casino_money(self, ctx, amt):
-        cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = ?", (int(amt),))
+        cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = %s", (int(amt),))
         db.commit()
         await ctx.reply("okay")
 
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def givebotrights(self, ctx):
-        cursor.execute(
-            "INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (self.bot.user.id, 0, 0, 1000, "", 0, 1))
+        cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)",(self.bot.user.id, 0, 0, 1000, "", 0, 1))
         db.commit()
 
 

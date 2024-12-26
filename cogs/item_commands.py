@@ -25,7 +25,7 @@ async def serverunmute(ctx):
 
 async def addtyrobot(ctx):
     await ctx.reply("Yay! TyroBot has started working for you. Expect around 15 coins an hour.")
-    cursor.execute("UPDATE USERDATA set tyrobotCount = tyrobotCount + 1 WHERE userID = ?", (ctx.author.id,))
+    cursor.execute("UPDATE USERDATA set tyrobotCount = tyrobotCount + 1 WHERE userID = %s", (ctx.author.id,))
 
 class itemcommands(commands.Cog):
     def __init__(self, bot):
@@ -63,7 +63,7 @@ class itemcommands(commands.Cog):
         else:
             user_id = ctx.author.id
             user = ctx.author
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = ?", (user_id,))
+        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (user_id,))
         boughtItems = cursor.fetchone()
         if not boughtItems:
             await ctx.reply("User has no items.")
@@ -73,7 +73,7 @@ class itemcommands(commands.Cog):
                               colour=0x00b0f4,
                               timestamp=datetime.datetime.now())
         for eachitem in boughtItems.split():
-            cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = ?", (eachitem,))
+            cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (eachitem,))
             item = cursor.fetchone()
             displayname, itemid, cost, description, emoji = item
             embed.add_field(name=f"{emoji} {displayname} \n", value=f"**{description}**", inline=False)
@@ -83,21 +83,21 @@ class itemcommands(commands.Cog):
     @commands.command(aliasas=['purchase', ], help="Buys an item from the shop \n Ensure you use the ""PurchaseID""")
     @commands.cooldown(1, 5, BucketType.user)
     async def buy(self, ctx, itemtobuy):
-        cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = ?", (itemtobuy,))
+        cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemtobuy,))
         item = cursor.fetchone()
         if not item:
             await ctx.reply("Item not found.")
             return
         displayname, itemid, cost, description, emoji = item
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         boughtitems = cursor.fetchone()
         if user_data[0] >= cost:
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - ? WHERE userID = ?", (cost, ctx.author.id))
+            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (cost, ctx.author.id))
             db.commit()
             updatedboughtitems = itemid + " " + boughtitems[0]
-            cursor.execute("UPDATE USERDATA SET boughtItems = ? WHERE userID = ?", (updatedboughtitems, ctx.author.id))
+            cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (updatedboughtitems, ctx.author.id))
             db.commit()
             await ctx.reply(f"You bought {displayname} for {cost} coins!")
         else:
@@ -105,19 +105,19 @@ class itemcommands(commands.Cog):
 
     @commands.command(help="Use an item you've bought.")
     async def use(self, ctx, itemToUse):
-        cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = ?", (itemToUse,))
+        cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemToUse,))
         item = cursor.fetchone()
         if not item:
             await ctx.reply("That item doesn't exist.")
             return
         displayname, itemid, cost, description, emoji = item
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if not user_data[0].__contains__(itemid):
             await ctx.reply("You don't own that item silly!")
             return
         updatedBoughItems = user_data[0].replace(itemid, "")
-        cursor.execute("UPDATE USERDATA SET boughtItems = ? WHERE userID = ?", (updatedBoughItems, ctx.author.id))
+        cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (updatedBoughItems, ctx.author.id))
         db.commit()
         # item uses (just check what item it is and call the function in item_commands.py
         if itemid == 'djpass':
@@ -131,14 +131,14 @@ class itemcommands(commands.Cog):
         victim = ctx.guild.get_member(user.id)
         if not user:
             ctx.reply("User not found")
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         user_data = cursor.fetchone()
         if not user_data:
             ctx.reply("Erm? what are u doing buddy, nono")
             return
         if user_data[0].__contains__("servermuter"):
             updatedData = user_data[0].replace("servermuter", "")
-            cursor.execute("UPDATE USERDATA SET boughtItems = ? WHERE userID = ?", (updatedData, ctx.author.id))
+            cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (updatedData, ctx.author.id))
             db.commit()
             await victim.edit(mute=True)
             await ctx.reply(f"Muted {victim.display_name}!")
@@ -156,7 +156,7 @@ class itemcommands(commands.Cog):
         else:
             await ctx.reply("You need to enter a user to rename.")
             return
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = ?", (ctx.author.id,))
+        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
         data = cursor.fetchone()
         if not data:
             await ctx.reply("User data not found.")
@@ -167,7 +167,7 @@ class itemcommands(commands.Cog):
                 member = guild.get_member(victim.id)
                 await member.edit(nick=f"{newname}")
                 await ctx.reply(f"Updated {member.display_name}")
-                cursor.execute("UPDATE USERDATA SET boughtItems = ? WHERE userID = ?",
+                cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s",
                                (data[0].replace('renamer', ''), ctx.author.id))
                 db.commit()
             except Exception as e:
