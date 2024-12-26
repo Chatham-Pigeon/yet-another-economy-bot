@@ -198,9 +198,10 @@ async def help(ctx):
 
 @bot.event
 async def on_command_error(ctx, error):
-    await ctx.message.add_reaction("❌")
     if isinstance(error, commands.CommandNotFound):
         msg = await ctx.reply("Command not found.")
+        ctx.message.add_reaction("❓")
+        reaction = True
     elif isinstance(error, commands.MissingRequiredArgument):
         msg = await ctx.reply("Missing required argument.")
     elif isinstance(error, commands.MissingPermissions):
@@ -209,9 +210,8 @@ async def on_command_error(ctx, error):
         msg = await ctx.reply(f"This command is on cooldown. Try again in {round(error.retry_after, 1)} seconds.")
     else:
         msg = await ctx.reply(f"An error occurred: {error}")
-    await asyncio.sleep(10)
-    await ctx.message.delete()
-    await msg.delete()
+    if not reaction:
+        await ctx.message.add_reaction("❌")
 
 @bot.event
 async def on_command_completion(ctx):
