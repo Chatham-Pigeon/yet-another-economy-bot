@@ -1,6 +1,5 @@
 import datetime
 import sqlite3
-from idlelib.macosx import hideTkConsole
 
 import discord
 from discord.ext import commands

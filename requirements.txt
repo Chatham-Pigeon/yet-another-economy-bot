@@ -1,5 +1,3 @@
 asyncio
 datetime
-sqlite3
-random
-audioop
+discord.py~=2.4.0
