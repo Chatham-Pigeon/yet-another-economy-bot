@@ -6,6 +6,7 @@ from datetime import timedelta
 from os import times
 from random import randint
 
+from DISCORD_TOKEN import DISCORD_TOKEN
 import discord
 from discord.ext import commands, tasks
 from discord.ext.commands import BucketType
@@ -326,4 +327,4 @@ async def main():
             print(f"Failed to load extension {extension}: {e}")
 
 asyncio.run(main())
-bot.run(config.TOKEN)
+bot.run(DISCORD_TOKEN)
