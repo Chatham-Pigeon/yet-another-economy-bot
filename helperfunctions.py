@@ -148,12 +148,19 @@ def get_db_connection(wherestarted=None):
         return None
 
 db, cursor = get_db_connection('helperfunctions')
-async def get_user_data(user_id, values=None):
-    if values is None or values == "":
-        query = f"SELECT * FROM USERDATA WHERE userID = {user_id}"
-    else:
-        formatted_values = ", ".join(str(item) for item in values)
-        query = f"SELECT {formatted_values} FROM USERDATA WHERE userID = {user_id}"
-    cursor.execute(query)
-    data = cursor.fetchone()
-    return data
+async def get_user_data(ctx, values=None):
+    """
+    param 1: msg ctx
+    param 2: LIST of values to get (empty = ALL)
+    """
+    try:
+        if values is None or values == "":
+            query = f"SELECT * FROM USERDATA WHERE userID = {ctx.author.id}"
+        else:
+            formatted_values = ", ".join(str(item) for item in values)
+            query = f"SELECT {formatted_values} FROM USERDATA WHERE userID = {ctx.author.id}"
+        cursor.execute(query)
+        data = cursor.fetchone()
+        return data
+    except Exception as e:
+        await ctx.bot.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} \n <#{ctx.channel.id}>")

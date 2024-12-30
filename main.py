@@ -11,7 +11,7 @@ from discord.ext.commands import BucketType
 from discord.ui import Button, View
 
 import config
-from helperfunctions import isadmin, SQL_EXECUTE, send_log, get_db_connection
+from helperfunctions import isadmin, SQL_EXECUTE, send_log, get_db_connection, get_user_data
 from cogs.item_commands import itemcommands
 intents = discord.Intents.default()
 intents.message_content = True
@@ -82,8 +82,8 @@ async def search(ctx):
         db.commit()
     elif rnum == 100:
         await ctx.reply(f"You searched a bit too hard and fell into the sewers under your bank. The police found you and confiscated half your money.")
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        walletAmt = cursor.fetchone()[0] / 2
+        user_data = await get_user_data(ctx, ['walletAmt'])
+        walletAmt = user_data[0] / 2
         cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (walletAmt, ctx.author.id))
         db.commit()
     elif rnum <= 84:
@@ -102,7 +102,7 @@ async def crime(ctx):
     messagevalue = config.CRIME_MESSAGES.pop(random.randint(0, len(config.CRIME_MESSAGES) - 1))
     if messagevalue is None:
         messagevalue = "Give me your coins **now**!"
-    await ctx.reply(f"You want to commit a crime huh? okay then, send \n{messagevalue} in chat to try commit a crime.")
+    await ctx.reply(f"You want to commit a crime huh? okay then, send \n`{messagevalue}` in chat to try commit a crime.")
     user_crime_command[ctx.author.id] = messagevalue
 
 async def triedcrime(ctx):
@@ -142,9 +142,8 @@ async def rob(ctx, user):
         rob.reset_cooldown(ctx)
         return
 
+    user_data = await get_user_data(ctx, ['walletAmt', 'boughtItems'])
     # grab authors data
-    cursor.execute("SELECT walletAmt, boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-    user_data = cursor.fetchone()
     if not user_data:
         await ctx.reply("User data not found.")
         rob.reset_cooldown(ctx)
@@ -154,8 +153,9 @@ async def rob(ctx, user):
         if wallet >= 25:
             if random.randint(1, 100) <= 50 or await isadmin(ctx):
                 # success
-                cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (victim.id,))
-                victimwallet = cursor.fetchone()[0]
+
+                user_data = await get_user_data(ctx, ['walletAmt'])
+                victimwallet = user_data[0]
                 halfvictimwallet = victimwallet // 2
                 coinsStolen = random.randint(1, halfvictimwallet)
                 cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (coinsStolen, ctx.author.id))
@@ -222,8 +222,7 @@ async def on_command_completion(ctx):
         cdstamp = datetime.datetime.now()
         user_level_xp_cooldown[ctx.author.id] = cdstamp
         xpGain = random.randint(1, 10)
-        cursor.execute("SELECT currentXP, userLevel FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = await get_user_data(ctx, ['currentXP', 'userLevel'])
         currentXP, userLevel = user_data
         currentXP = currentXP + xpGain
         await ctx.message.add_reaction("✨")
@@ -245,8 +244,7 @@ async def on_command_completion(ctx):
 
 @bot.command(help="Check your XP and Level")
 async def level(ctx):
-    cursor.execute("SELECT currentXP, userLevel FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-    user_data = cursor.fetchone()
+    user_data = await get_user_data(ctx, ['currentXP', 'userLevel'])
     currentXP, userlevel = user_data
     maxXP = userlevel * 100
     user = ctx.author.display_name
@@ -279,8 +277,8 @@ async def on_ready():
 
 @bot.check
 async def everyCommandCheck(ctx):
-    cursor.execute("SELECT * FROM USERDATA WHERE userID = %s", (ctx.author.id,))
     last_command_time[f"{ctx.author.id} {ctx.message.id}"] = time.time()
+    cursor.execute("SELECT * FROM USERDATA WHERE userID = %s", (ctx.author.id,))
     user = cursor.fetchone()
     if not user:
         embed = discord.Embed(title="Welcome!", description="Hi! Welcome to a general purpose economy bot,\nAll your data should be initalised :3 have fun!")

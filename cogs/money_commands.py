@@ -34,7 +34,7 @@ class moneycommands(commands.Cog):
         else:
             user = ctx.author
 
-        user_data = await get_user_data(user.id, ['walletAmt', 'bankAmt', 'bankMax'])
+        user_data = await get_user_data(ctx, ['walletAmt', 'bankAmt', 'bankMax'])
         try:
             if not user_data:
                 await ctx.reply(f"No data found for {user.display_name}.")
@@ -55,13 +55,10 @@ class moneycommands(commands.Cog):
     async def deposit(self, ctx, depositamt):
         try:
             # Fetch user data
-            cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-            user_data = cursor.fetchone()
-
+            user_data = await get_user_data(ctx, ['walletAmt', 'bankAmt', 'bankMax'])
             if not user_data:
                 await ctx.reply("User data not found.")
                 return
-
             wallet, bank, bank_max = user_data
 
             if depositamt.lower() == "all":
@@ -99,8 +96,7 @@ class moneycommands(commands.Cog):
     async def withdraw(self, ctx, amt):
         try:
             # Fetch user data
-            cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-            user_data = cursor.fetchone()
+            user_data = await get_user_data (ctx, ['walletAmt', 'bankAmt', 'bankMax'])
 
             if not user_data:
                 await ctx.reply("User data not found.")
@@ -154,8 +150,7 @@ class moneycommands(commands.Cog):
             self.coinflip.reset_cooldown(ctx)
             return
 
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = await get_user_data (ctx, ['walletAmt'])
         if user_data[0] < betamt:
             await ctx.reply("You don't have enough coins in your wallet for this bet.")
             return
@@ -191,8 +186,7 @@ class moneycommands(commands.Cog):
             return
 
         # Fetch user data
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = await get_user_data (ctx, ['walletAmt'])
         if not user_data or user_data[0] < betamt:
             await ctx.reply("You don't have enough coins in your wallet for this bet.")
             self.blackjack.reset_cooldown(ctx)
@@ -335,8 +329,7 @@ class moneycommands(commands.Cog):
             await ctx.reply("you can't donate less than 1 coin")
             return
 
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = await get_user_data (ctx, ['walletAmt'])
         if user_data[0] < amt:
             await ctx.reply("you can't give that much ur too poor")
             return
@@ -436,8 +429,7 @@ class moneycommands(commands.Cog):
 
             return
 
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = get_user_data(ctx, ['walletAmt'])
         if not user_data or user_data[0] < betAmt:
             await ctx.reply("You don't have enough coins in your wallet for this bet.")
             self.mines.reset_cooldown(ctx)
@@ -497,8 +489,8 @@ class moneycommands(commands.Cog):
     @commands.command(help="Donates money to the casino.")
     async def donate(self, ctx, amt):
         if not amt is None:
-            cursor.execute("SELECT walletAmt from USERDATA WHERE userID = %s ", (ctx.author.id,))
-            user_data = cursor.fetchone()
+
+            user_data = await get_user_data(ctx, ['walletAmt'])
             if user_data[0] < int(amt):
                 await ctx.reply("You don't have enough coins in your wallet for this donation.")
                 return
@@ -511,8 +503,7 @@ class moneycommands(commands.Cog):
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx, user, amt):
         # too lazy to continue this too hard :(
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = await get_user_data(ctx, ['walletAmt'])
         if user_data[0] < amt:
             await ctx.reply("You don't have enough money in your wallet for this.")
             return

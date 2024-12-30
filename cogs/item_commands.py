@@ -6,7 +6,7 @@ from discord.ext import commands
 from discord.ext.commands import BucketType, CommandOnCooldown
 
 import config
-from helperfunctions import get_db_connection
+from helperfunctions import get_db_connection, get_user_data
 
 db, cursor = get_db_connection('item_commands')
 
@@ -62,8 +62,8 @@ class itemcommands(commands.Cog):
         else:
             user_id = ctx.author.id
             user = ctx.author
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (user_id,))
-        boughtItems = cursor.fetchone()
+        user_data =  await get_user_data(ctx, ['boughtItems'])
+        boughtItems = user_data[0]
         if not boughtItems:
             await ctx.reply("User has no items.")
             return
@@ -88,14 +88,12 @@ class itemcommands(commands.Cog):
             await ctx.reply("Item not found.")
             return
         displayname, itemid, cost, description, emoji = item
-        cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        boughtitems = cursor.fetchone()
-        if user_data[0] >= cost:
+        user_data = await get_user_data(ctx, ['walletAmt', 'boughtItems'])
+        walletAmt, boughtitems = user_data
+        if walletAmt >= cost:
             cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt - %s WHERE userID = %s", (cost, ctx.author.id))
             db.commit()
-            updatedboughtitems = itemid + " " + boughtitems[0]
+            updatedboughtitems = itemid + " " + boughtitems
             cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (updatedboughtitems, ctx.author.id))
             db.commit()
             await ctx.reply(f"You bought {displayname} for {cost} coins!")
@@ -110,8 +108,7 @@ class itemcommands(commands.Cog):
             await ctx.reply("That item doesn't exist.")
             return
         displayname, itemid, cost, description, emoji = item
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+        user_data = await get_user_data(ctx, ['boughtItems'])
         if not user_data[0].__contains__(itemid):
             await ctx.reply("You don't own that item silly!")
             return
@@ -130,8 +127,8 @@ class itemcommands(commands.Cog):
         victim = ctx.guild.get_member(user.id)
         if not user:
             ctx.reply("User not found")
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        user_data = cursor.fetchone()
+
+        user_data = await get_user_data(ctx, ['boughtItems'])
         if not user_data:
             ctx.reply("Erm? what are u doing buddy, nono")
             return
@@ -155,11 +152,11 @@ class itemcommands(commands.Cog):
         else:
             await ctx.reply("You need to enter a user to rename.")
             return
-        cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (ctx.author.id,))
-        data = cursor.fetchone()
-        if not data:
+
+        user_data = await get_user_data(ctx, ['boughtItems'])
+        if not user_data:
             await ctx.reply("User data not found.")
-        if data[0].__contains__('renamer'):
+        if user_data[0].__contains__('renamer'):
 
             try:
                 guild = ctx.guild
@@ -167,7 +164,7 @@ class itemcommands(commands.Cog):
                 await member.edit(nick=f"{newname}")
                 await ctx.reply(f"Updated {member.display_name}")
                 cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s",
-                               (data[0].replace('renamer', ''), ctx.author.id))
+                               (user_data[0].replace('renamer', ''), ctx.author.id))
                 db.commit()
             except Exception as e:
                 await ctx.reply(f"An error has occured: {e}")

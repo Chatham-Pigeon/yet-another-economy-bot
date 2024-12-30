@@ -3,7 +3,7 @@ import datetime
 import discord
 from discord.ext import commands
 import config
-from helperfunctions import isadmin, SQL_EXECUTE, dointerest, get_db_connection
+from helperfunctions import isadmin, SQL_EXECUTE, dointerest, get_db_connection, get_user_data
 
 db, cursor = get_db_connection('admin_commands')
 
@@ -78,16 +78,12 @@ class admincommands(commands.Cog):
             await ctx.reply("Please provide a valid amount.")
             return
 
-        # Fetch the recipient's user data
         try:
-            cursor.execute("SELECT walletAmt FROM USERDATA WHERE userID = %s", (user.id,))
-            user_data = cursor.fetchone()
-
+            user_data = await get_user_data(ctx, ['walletAmt'])
             if not user_data:
                 await ctx.reply(f"User data not found for {user.display_name}.")
                 return
 
-            # Update the recipient's wallet
             cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (amt, user.id))
             db.commit()
             await ctx.reply(f"Successfully given {amt} coins to {user.display_name}!")
