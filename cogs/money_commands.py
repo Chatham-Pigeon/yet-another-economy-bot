@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+from importlib.metadata import files
 
 import discord
 from discord.ext import commands
@@ -8,11 +9,9 @@ import random
 from discord.ui import Button, View
 
 import config
-from helperfunctions import isadmin, SQL_EXECUTE, get_db_connection
+from helperfunctions import isadmin, SQL_EXECUTE, get_db_connection, get_user_data
 
-db= get_db_connection()
-cursor = db.cursor()
-
+db, cursor = get_db_connection('money_commands')
 
 async def get_casino_money():
     cursor.execute("SELECT casinoPot FROM GLOBALVARIABLES")
@@ -35,10 +34,7 @@ class moneycommands(commands.Cog):
         else:
             user = ctx.author
 
-        # Fetch user data
-        cursor.execute("SELECT walletAmt, bankAmt, bankMax FROM USERDATA WHERE userID = %s", (user.id,))
-        user_data = cursor.fetchone()
-
+        user_data = await get_user_data(user.id, ['walletAmt', 'bankAmt', 'bankMax'])
         try:
             if not user_data:
                 await ctx.reply(f"No data found for {user.display_name}.")

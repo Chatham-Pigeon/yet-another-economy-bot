@@ -8,8 +8,7 @@ from discord.ext.commands import BucketType, CommandOnCooldown
 import config
 from helperfunctions import get_db_connection
 
-db= get_db_connection()
-cursor = db.cursor()
+db, cursor = get_db_connection('item_commands')
 
 
 async def djpass(ctx):

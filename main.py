@@ -2,8 +2,7 @@ import asyncio
 import datetime
 import random
 from datetime import timedelta
-from os import times
-from random import randint
+import time
 
 from DISCORD_TOKEN import DISCORD_TOKEN
 import discord
@@ -20,16 +19,17 @@ intents.messages = True
 intents.members = True
 bot = commands.Bot(command_prefix='!', intents=intents, help_command=None)
 
-db = get_db_connection()
-cursor = db.cursor()
+db, cursor = get_db_connection('main')
 cursor.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT)")
 cursor.execute("CREATE TABLE IF NOT EXISTS USERDATA(userID BIGINT, walletAmt INT, bankAmt INT, bankMax INT, boughtItems varchar(255), currentXP INT, userLevel INT)")
 cursor.execute("CREATE TABLE IF NOT EXISTS SHOPITEMS(displayname varchar(255), itemid varchar(255), cost INT, description varchar(255), emoji varchar(255))")
 db.commit()
+
 useitem = itemcommands(bot)
 
 user_level_xp_cooldown = {}
 user_crime_command = {}
+last_command_time = {}
 
 tyrobotTimes = []
 for i in range(24):
@@ -101,9 +101,10 @@ async def search(ctx):
 async def crime(ctx):
     messagevalue = config.CRIME_MESSAGES.pop(random.randint(0, len(config.CRIME_MESSAGES) - 1))
     if messagevalue is None:
-        messagevalue = "Give me your coins!"
-    await ctx.reply(f"You want to commit a crime huh? okay then, send \n`{messagevalue}` in chat to try commit a crime.")
+        messagevalue = "Give me your coins **now**!"
+    await ctx.reply(f"You want to commit a crime huh? okay then, send \n{messagevalue} in chat to try commit a crime.")
     user_crime_command[ctx.author.id] = messagevalue
+
 async def triedcrime(ctx):
     del user_crime_command[ctx.author.id]
     r = random.randint(1, 100)
@@ -236,6 +237,11 @@ async def on_command_completion(ctx):
             db.commit()
             cursor.execute("UPDATE USERDATA SET currentXP = 0 WHERE userID = %s", (ctx.author.id,))
             db.commit()
+    if config.DEBUG is True:
+        prev_time = last_command_time.pop(f"{ctx.author.id} {ctx.message.id}")
+        time_difference = time.time() - prev_time
+        time_difference = round(time_difference, 0) * 1000
+        await ctx.reply(f"Pong! {time_difference}ms")
 
 @bot.command(help="Check your XP and Level")
 async def level(ctx):
@@ -258,38 +264,6 @@ async def tyrobotcoins():
 
 
 @bot.event
-async def on_member_update(before, after):
-    if not hasattr(config, "ROLE_TIMEOUT["):
-        return  # Ensure the role config exists before proceeding
-
-    role_timeout = after.guild.get_role(config.ROLE_TIMEOUT)  # Retrieve the role using its ID
-    if role_timeout in after.roles and role_timeout not in before.roles:
-        # User just got the ROLE_TIMECOUNT role
-        cursor.execute("UPDATE USERDATA SET inTimeout = %s WHERE userID = %s", (True, after.id))
-        db.commit()
-    elif role_timeout not in after.roles and role_timeout in before.roles:
-        # User just lost the ROLE_TIMECOUNT role
-        cursor.execute("UPDATE USERDATA SET inTimeout = %s WHERE userID = %s", (False, after.id))
-        db.commit()
-
-
-@bot.event
-async def on_member_join(member):
-    """
-    Event triggered when a member joins the server. Assigns the timeout role
-    if their 'inTimeout' field in USERDATA is true.
-    """
-    if not hasattr(config, "ROLE_TIMEOUT"):
-        return  # Ensure the role config exists before proceeding
-
-    role_timeout = member.guild.get_role(config.ROLE_TIMEOUT)  # Retrieve the timeout role using its ID
-    cursor.execute("SELECT inTimeout FROM USERDATA WHERE userID = %s", (member.id,))
-    user_data = cursor.fetchone()
-
-    if user_data and user_data[0]:  # Check if `inTimeout` is true
-        if role_timeout:
-            await member.add_roles(role_timeout)
-@bot.event
 async def on_message(message):
     if message.author == bot.user:
         return
@@ -299,11 +273,14 @@ async def on_message(message):
             await triedcrime(message)
     await bot.process_commands(message)
 
-
+@bot.event
+async def on_ready():
+    await bot.get_channel(config.CHANNEL_AGPDS_BOTCMDS).send(":white_check_mark: Bot Ready!")
 
 @bot.check
-async def initUser(ctx):
+async def everyCommandCheck(ctx):
     cursor.execute("SELECT * FROM USERDATA WHERE userID = %s", (ctx.author.id,))
+    last_command_time[f"{ctx.author.id} {ctx.message.id}"] = time.time()
     user = cursor.fetchone()
     if not user:
         embed = discord.Embed(title="Welcome!", description="Hi! Welcome to a general purpose economy bot,\nAll your data should be initalised :3 have fun!")

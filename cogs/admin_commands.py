@@ -5,8 +5,7 @@ from discord.ext import commands
 import config
 from helperfunctions import isadmin, SQL_EXECUTE, dointerest, get_db_connection
 
-db= get_db_connection()
-cursor = db.cursor()
+db, cursor = get_db_connection('admin_commands')
 
 class admincommands(commands.Cog):
     def __init__(self, bot):

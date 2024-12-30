@@ -3,15 +3,13 @@ import mysql
 from mysql.connector import Error
 
 import config
-import sqlite3
 
 from DISCORD_TOKEN import dbinfo
 
-db = sqlite3.connect("./economy.db")
-cursor = db.cursor()
-
-
 async def isadmin(ctx):
+    """
+    use message ctx ;3
+    """
     if ctx.author.get_role(config.ROLE_ADMIN):
         return True
     else:
@@ -103,6 +101,8 @@ async def SQL_EXECUTE(action, table, values=None, conditions=None):
     print(query)
 
 async def dointerest(ctx):
+    db = get_db_connection()
+    cursor = db.cursor()
     cursor.execute("SELECT userID, bankAmt FROM USERDATA")
     user_data = cursor.fetchall()
     for user in user_data:
@@ -113,50 +113,47 @@ async def dointerest(ctx):
             bankAmt = round(bankAmt)
             cursor.execute("UPDATE USERDATA SET bankAmt = %s WHERE userID = %s", (bankAmt, userID))
             db.commit()
+    db.close()
 
 async def send_log(ctx, info=None):
+    """
+    param 1: message ctx
+    param 2: other info to attach to log (optional)
+    """
     content = f"**{ctx.author.display_name}** used `{ctx.command}`."
     if info:
         content = content + f"Extra Info: {info}"
     await ctx.bot.get_channel(config.CHANNEL_LOG).send(
         content=content)
-def create_database_connection():
-    try:
-        # MySQL Connection
-        db_connection = mysql.connector.pooling.connect()
-
-        if db_connection.is_connected():
-            print("Connection to MySQL database was successful!")
-            return db_connection
-        else:
-            print("Failed to establish a connection to the database.")
-            return None
-    except Error as e:
-        print(f"Error while connecting to MySQL: {e}")
-        return None
 
 
-def get_db_connection():
+
+
+def get_db_connection(wherestarted=None):
+    if wherestarted is None:
+        wherestarted = "Undefined"
     try:
         # MySQL Connection
         db_connection = mysql.connector.pooling.connect(**dbinfo)
 
         if db_connection.is_connected():
-            print("Connection to MySQL database was successful!")
-            return db_connection
+            print(f"Connection at {wherestarted} to MySQL database was successful!")
+            cursor = db_connection.cursor(buffered=True)
+            return [db_connection, cursor]
         else:
-            print("Failed to establish a connection to the database.")
+            print(f"Failed to establish a connection to the database at {wherestarted}.")
             return None
     except Error as e:
-        print(f"Error while connecting to MySQL: {e}")
+        print(f"Error at {wherestarted} while connecting to MySQL: {e}")
         return None
 
-database = get_db_connection()
-
-if database:
-    # Only initialize the cursor if the connection is valid
-    cursor = database.cursor()
-    # Perform operations like cursor.execute() here
-else:
-    cursor = None
-    print("Cursor initialization failed due to database connection issues.")
+db, cursor = get_db_connection('helperfunctions')
+async def get_user_data(user_id, values=None):
+    if values is None or values == "":
+        query = f"SELECT * FROM USERDATA WHERE userID = {user_id}"
+    else:
+        formatted_values = ", ".join(str(item) for item in values)
+        query = f"SELECT {formatted_values} FROM USERDATA WHERE userID = {user_id}"
+    cursor.execute(query)
+    data = cursor.fetchone()
+    return data
