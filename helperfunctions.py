@@ -120,7 +120,7 @@ async def send_log(ctx, info=None):
     param 1: message ctx
     param 2: other info to attach to log (optional)
     """
-    content = f"**{ctx.author.display_name}** used `{ctx.command}`."
+    content = f"**{ctx.author.display_name}** used `{ctx.message.content}`."
     if info:
         content = content + f"Extra Info: {info}"
     await ctx.bot.get_channel(config.CHANNEL_LOG).send(
