@@ -199,18 +199,29 @@ async def help(ctx):
 
 @bot.event
 async def on_command_error(ctx, error):
+    error_file: discord.File = error.traceback_as_file(error.original)
+    reaction = False
+    tb = error.__traceback__
+    tb_lines = []
+    while tb is not None:
+        file = tb.tb_frame.f_code.co_filename
+        line = tb.tb_lineno
+        name = tb.tb_frame.f_code.co_name
+        tb_lines.append(f"File \"{file}\", line {line}, in {name}")
+        tb = tb.tb_next
+    tb_text = "\n".join(tb_lines)
+
     if isinstance(error, commands.CommandNotFound):
-        msg = await ctx.reply("Command not found.")
         ctx.message.add_reaction("❓")
         reaction = True
     elif isinstance(error, commands.MissingRequiredArgument):
-        msg = await ctx.reply("Missing required argument.")
+        ctx.message.add_reaction("❔")
     elif isinstance(error, commands.MissingPermissions):
         msg = await ctx.reply("You don't have the required permissions to run this command.")
     elif isinstance(error, commands.CommandOnCooldown):
         msg = await ctx.reply(f"This command is on cooldown. Try again in {round(error.retry_after, 1)} seconds.")
     else:
-        msg = await ctx.reply(f"An error occurred: {error}")
+        msg = await ctx.reply(f"An error occurred: {error}", file=error_file)
     if not reaction:
         await ctx.message.add_reaction("❌")
 

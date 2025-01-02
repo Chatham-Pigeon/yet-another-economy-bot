@@ -1,9 +1,7 @@
 import discord
 import mysql
 from mysql.connector import Error
-
 import config
-
 from DISCORD_TOKEN import dbinfo
 
 async def isadmin(ctx):
@@ -148,23 +146,26 @@ def get_db_connection(wherestarted=None):
         return None
 
 db, cursor = get_db_connection('helperfunctions')
-async def get_user_data(ctx, values=None):
+
+
+async def get_user_data(ctx, values=None, userId=None):
     """
-    param 1: msg ctx
+    param 1: msg ctx/int
     param 2: LIST of values to get (empty = ALL)
+    param3: if you're trying to get id of someone not author use this (user id)
     """
-    if type(ctx) == int:
-        pass
-    else:
+    if userId is None:
         user = ctx.author.id
+    else:
+        user = userId
     try:
         if values is None or values == "":
-            query = f"SELECT * FROM USERDATA WHERE userID = {ctx.author.id}"
+            query = f"SELECT * FROM USERDATA WHERE userID = {user}"
         else:
             formatted_values = ", ".join(str(item) for item in values)
-            query = f"SELECT {formatted_values} FROM USERDATA WHERE userID = {ctx.author.id}"
+            query = f"SELECT {formatted_values} FROM USERDATA WHERE userID = {user}"
         cursor.execute(query)
         data = cursor.fetchone()
         return data
     except Exception as e:
-        await ctx.bot.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} \n <#{ctx.channel.id}>")
+        await ctx.bot.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} <#{ctx.channel.id}> \n")
