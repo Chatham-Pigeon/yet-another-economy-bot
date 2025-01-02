@@ -153,6 +153,10 @@ async def get_user_data(ctx, values=None):
     param 1: msg ctx
     param 2: LIST of values to get (empty = ALL)
     """
+    if type(ctx) == int:
+        pass
+    else:
+        user = ctx.author.id
     try:
         if values is None or values == "":
             query = f"SELECT * FROM USERDATA WHERE userID = {ctx.author.id}"

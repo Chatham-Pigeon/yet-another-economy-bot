@@ -34,7 +34,7 @@ class moneycommands(commands.Cog):
         else:
             user = ctx.author
 
-        user_data = await get_user_data(ctx, ['walletAmt', 'bankAmt', 'bankMax'])
+        user_data = await get_user_data(user.id, ['walletAmt', 'bankAmt', 'bankMax'])
         try:
             if not user_data:
                 await ctx.reply(f"No data found for {user.display_name}.")
