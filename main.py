@@ -224,7 +224,7 @@ async def on_command_completion(ctx):
         userdata['currentXP'] = userdata['currentXP'] + xpGain
         if userdata['currentXP'] >= userdata['userLevel'] * 100:
             userdata['userLevel'] = userdata['userLevel'] + 1
-            userdata['bankMax'] = userdata['bankMax'] + 250
+            userdata['bankMax'] = 1000 + userdata['userLevel'] * 250
             userdata['currentXP'] = userdata['currentXP'] = 0
             await update_user_data(userdata, 'command completion')
             await ctx.reply(f"Congratulations {ctx.author.display_name}! You have reached level {userdata['userLevel'] + 1}!")
