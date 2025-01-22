@@ -241,7 +241,7 @@ async def level(ctx):
     userdata = await user_data(ctx.author.id, 'level')
     maxXP = userdata['userLevel'] * 100
     embed = discord.Embed(title=f"{ctx.author.display_name}' s Level Info",
-                          description=f"Level {userdata['userLevel']}\nxp: {userdata['currentXp']}/{maxXP}",
+                          description=f"Level {userdata['userLevel']}\nxp: {userdata['currentXP']}/{maxXP}",
                           timestamp=datetime.datetime.now(),)
 
     embed.set_footer(text=f"{config.STATIC_CREDITS}")
