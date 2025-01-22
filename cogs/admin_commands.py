@@ -3,9 +3,9 @@ import datetime
 import discord
 from discord.ext import commands
 import config
-from helperfunctions import isadmin, SQL_EXECUTE, dointerest, get_db_connection, get_user_data
+from helperfunctions import isadmin, dointerest, get_db_connection
 
-db, cursor = get_db_connection('admin_commands')
+
 
 class admincommands(commands.Cog):
     def __init__(self, bot):
@@ -13,7 +13,8 @@ class admincommands(commands.Cog):
 
     @commands.command(hidden=True)
     @commands.check(isadmin)
-    async def execute(self, ctx, execute,):
+    async def sqlexecute(self, ctx, execute):
+        db, cursor = get_db_connection('sqlexecute') #im too fucking lazy to do these
         if execute:
             try:
                 cursor.execute(f"{execute}")
@@ -27,7 +28,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def additem(self, ctx, displayname, itemid, cost, description, emoji):
-
+        db, cursor = get_db_connection('additem') #okay sure ig
         if displayname and itemid and cost and description and emoji:
             cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemid,))
             if cursor.fetchone():
@@ -53,6 +54,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def setitemcost(self, ctx, itemid, cost):
+        db, cursor = get_db_connection('setitemcost') #im too fucking lazy to do these
         if itemid and cost:
             cursor.execute("UPDATE SHOPITEMS SET cost = %s WHERE itemid = %s", (cost, itemid))
             db.commit()
@@ -61,6 +63,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def givecoins(self, ctx, user, amt):
+        db, cursor = get_db_connection('givecoins') #im too fucking lazy to do these ones
 
         if not user or not amt:
            await ctx.reply("You need to specify a user and an amount!")
@@ -79,10 +82,10 @@ class admincommands(commands.Cog):
             return
 
         try:
-            user_data = await get_user_data(ctx, ['walletAmt'])
-            if not user_data:
-                await ctx.reply(f"User data not found for {user.display_name}.")
-                return
+            #user_data = await get_user_data(ctx, ['walletAmt'])
+            #if not user_data:
+                #await ctx.reply(f"User data not found for {user.display_name}.")
+                #return
 
             cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (amt, user.id))
             db.commit()
@@ -91,15 +94,11 @@ class admincommands(commands.Cog):
         except Exception as e:
             await ctx.reply(f"An error occurred: {e}")
 
-    @commands.command(hidden=True)
-    @commands.check(isadmin)
-    async def test(self, ctx):
-        await SQL_EXECUTE('UPDATE', 'USERDATA', {'walletAmt': f'walletAmt = walletAmt + {10}'},
-                          {'userID': f'{ctx.author.id}'})
 
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def fixbank(self, ctx):
+        db, cursor = get_db_connection('fixbank') #im too fucking lazy to do these ones
         cursor.execute("SELECT bankAmt, userID FROM USERDATA")
         bankdata = cursor.fetchall()
         for amt in bankdata:
@@ -123,6 +122,7 @@ class admincommands(commands.Cog):
     @commands.command(aliases=['casino'], hidden=True)
     @commands.check(isadmin)
     async def set_casino_money(self, ctx, amt):
+        db, cursor = get_db_connection('setcasinomoney') #im too fucking lazy to do these ones
         cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = %s", (int(amt),))
         db.commit()
         await ctx.reply("okay")
@@ -130,8 +130,19 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def givebotrights(self, ctx):
+        db, cursor = get_db_connection('givebotrights') #im too fucking lazy to do these ones
         cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)",(self.bot.user.id, 0, 0, 1000, "", 0, 1))
         db.commit()
+
+    @commands.command(hidden=True)
+    @commands.check(isadmin)
+    async def adduser(self, ctx, userID):
+        db, cursor = get_db_connection('adduser') #im too fucking lazy to do these ones
+        if userID is None or type(userID) == int:
+            await ctx.reply("You need to enter a userID to add.")
+            return
+        cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ctx.author.id, 0, 0, 1000, "", 0, 1))
+        await ctx.reply(f"Added {userID} to the Database \n -# **THERE ARE NO CHECKS TO ENSURE THAT USERID IS VALID!!!!**")
 
 
 async def setup(bot):

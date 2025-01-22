@@ -1,8 +1,8 @@
-import discord
 import mysql
 from mysql.connector import Error
 import config
 from DISCORD_TOKEN import dbinfo
+
 
 async def isadmin(ctx):
     """
@@ -14,96 +14,13 @@ async def isadmin(ctx):
         return False
 
 
-#  cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (betamt, ctx.author.id))
-async def SQL_EXECUTE(action, table, values=None, conditions=None):
-    """
-    action = UPDATE, INSERT, DELETE, SELECT
-    table = table u want to update
-    values = if SELECT: LIST if update: DICTIONARY
-    conditions = for things like WHERE
 
-    returns:
-    cursor.fetchone() if SELECT
-    """
-    if action == 'UPDATE':
-        query = f'UPDATE {table} SET '
-        valueslen = len(values)
-        i = 0
-        for key, value in values.items():
-            i = i + 1
-            query = query + f"{key} = '{value}'"
-            if i < valueslen:
-                query = query + ', '
-        conlen = len(conditions)
-        i = 0
-        query = query + ' WHERE '
-        for key, value in conditions.items():
-            i = i + 1
-            if type(value) == str:
-                query = query + f"{key} = '{value}'"
-            else:
-                query = query + f"{key} = {value}"
-            if i < conlen:
-                query = query + ' AND '
-
-    elif action == "INSERT":
-        query = f"INSERT INTO {table} ("
-        i = 0
-        valueslen = len(values)
-        print(query)
-        if values:
-            for key, value in values.items():
-                i = i + 1
-                query = query + key
-                print(query)
-                if i < valueslen:
-                    print('bruh')
-                    query = query + ", "
-                print(query)
-            query = query + ") VALUES ("
-            i = 0
-            for key, value in values.items():
-                i += 1
-                query = query + f"'{value}'"
-                if i < valueslen:
-                    query = query + ", "
-                else:
-                    query = query + ")"
-
-    elif action == "SELECT":
-        # adding the things u want to select to the query
-        queries = ""
-        querieslen = len(values)
-        i = 0
-        # values here should be a LIST, so were turning the list values into a string with ", " in the middle
-        for value in values:
-            i = i + 1
-            queries = queries + value
-            # if it ISN'T the last value, add ", " (sql will yell at you if the values end with, so it needs to be avoided
-            if i < querieslen:
-                queries = queries + ", "
-                #add the stringified values & table to query
-        query = f"SELECT {queries} FROM {table} "
-        if conditions:
-            condition = ""
-            increm = 0
-            for key, value in conditions.items():
-                increm = increm + 1
-                condition = condition + f"{key} = '{value}'"
-                length = len(conditions)
-                # avoid adding AND at the end of the conditions, otherwise SQL complains
-                if increm < length:
-                    condition = condition + " AND "
-            #add the actual where + stringified conditions to the entire query
-            query = query + f"WHERE {condition}"
-    print(query)
 
 async def dointerest(ctx):
-    db = get_db_connection()
-    cursor = db.cursor()
+    db, cursor = get_db_connection()
     cursor.execute("SELECT userID, bankAmt FROM USERDATA")
-    user_data = cursor.fetchall()
-    for user in user_data:
+    userdata = cursor.fetchall()
+    for user in userdata:
         userID, bankAmt = user
         if bankAmt >= 0:
             interest = bankAmt * 0.02
@@ -124,48 +41,95 @@ async def send_log(ctx, info=None):
     await ctx.bot.get_channel(config.CHANNEL_LOG).send(
         content=content)
 
-
-
-
 def get_db_connection(wherestarted=None):
+    """
+    returns a database connection & cursor
+    param 1: location of code where started (optional)
+    """
     if wherestarted is None:
         wherestarted = "Undefined"
-    try:
-        # MySQL Connection
-        db_connection = mysql.connector.pooling.connect(**dbinfo)
 
-        if db_connection.is_connected():
-            print(f"Connection at {wherestarted} to MySQL database was successful!")
-            cursor = db_connection.cursor(buffered=True)
-            return [db_connection, cursor]
-        else:
-            print(f"Failed to establish a connection to the database at {wherestarted}.")
-            return None
-    except Error as e:
-        print(f"Error at {wherestarted} while connecting to MySQL: {e}")
-        return None
-
-db, cursor = get_db_connection('helperfunctions')
-
-
-async def get_user_data(ctx, values=None, userId=None):
-    """
-    param 1: msg ctx/int
-    param 2: LIST of values to get (empty = ALL)
-    param3: if you're trying to get id of someone not author use this (user id)
-    """
-    if userId is None:
-        user = ctx.author.id
+    if config.DB_CONNECTION is None:
+        config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
+        return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+    if config.DB_CONNECTION.is_connected():
+        return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
     else:
-        user = userId
+        try:
+            config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
+            if config.DB_CONNECTION.is_connected:
+                return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+        except:
+            print("DATABASE CONNECTION FAILED")
+
+
+async def user_items(userId, wherefrom = 'Undefined') -> list:
+    """
+    param 1: userId of the users items you want
+    parm 2: where the call came from (optional)
+    returns a list of all the users items + their userID at the 0th index
+    typically used in conjunction with update_user_items
+    """
+    db, cursor = get_db_connection(f'user_items,, {wherefrom}')
+    cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (userId,))
+    itemstuple = cursor.fetchone()
+    itemsstring = itemstuple[0]
+    itemslist: list = itemsstring.split()
+    itemslist.insert(0, userId)
+    return itemslist
+
+async def update_user_items(itemlist: list, wherefrom = 'Undefined'):
+    """
+    param 1: list of items (and userId at 0th index
+    param 2: where the call came from (optional)
+    update a users bought items with items inside the list,
+    likely you should pass a list with ALL the list items from the user_data function call
+    """
+    db, cursor = get_db_connection(f'update_user_items,, {wherefrom}')
+    userId = itemlist.pop(0)
+    items = ' '.join(itemlist)
+    cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (items, userId))
+    db.commit()
+
+
+async def user_data(userId, wherefrom ='Undefined'):
+    """
+    param 1: userid of the user's data you want, likely ctx.author.id
+    param 2: where the call came from (optional)
+    returns a dictionary of the users data, uses the direct names of db column names
+    typically in conjunction with update_user_data to grab & update data
+    """
     try:
-        if values is None or values == "":
-            query = f"SELECT * FROM USERDATA WHERE userID = {user}"
-        else:
-            formatted_values = ", ".join(str(item) for item in values)
-            query = f"SELECT {formatted_values} FROM USERDATA WHERE userID = {user}"
-        cursor.execute(query)
-        data = cursor.fetchone()
-        return data
+        db, cursor = get_db_connection(f'user_data,, {wherefrom}')
+        cursor.execute("SELECT * FROM USERDATA WHERE userID = %s", (userId,))
+        userdata = cursor.fetchone()
+        cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 's10052_economy' AND TABLE_NAME = 'USERDATA'")
+        table_data = [row[0] for row in cursor.fetchall()]
+        userdict = {}
+        for i in range(len(userdata)):
+            userdict[table_data[i]] = userdata[i]
+        userdict['userID'] = userId
+        return userdict
     except Exception as e:
-        await ctx.bot.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} <#{ctx.channel.id}> \n")
+        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} 'IDK WHERE!!' \n")
+
+
+async def update_user_data(userdict: dict, wherefrom ='Undefined'):
+    """
+    param 1: dictionary of user data
+    param 2: where the call came from (optional)
+    update a users data with all data inside the dict,
+    likely you should pass a dictionary with ALL the users data from user_data function call
+    """
+    db, cursor = get_db_connection(f'update_user_data,, {wherefrom}')
+    userID = userdict['userID']
+    cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 's10052_economy' AND TABLE_NAME = 'USERDATA'")
+    table_data = [row[0] for row in cursor.fetchall()]
+    for key, value in userdict.items():
+        if not table_data.__contains__(key):
+            print("TRIED TO UPDATE NON EXISTANT USERDATA COLUMN ! ! !")
+            continue
+        query = f"UPDATE USERDATA SET {key} = %s WHERE userID = %s"
+        cursor.execute(query, (value, userID))
+    db.commit()
+
