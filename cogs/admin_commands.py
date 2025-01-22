@@ -14,7 +14,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def sqlexecute(self, ctx, execute):
-        db, cursor = get_db_connection('sqlexecute') #im too fucking lazy to do these
+        db, cursor = await get_db_connection('sqlexecute') #im too fucking lazy to do these
         if execute:
             try:
                 cursor.execute(f"{execute}")
@@ -28,7 +28,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def additem(self, ctx, displayname, itemid, cost, description, emoji):
-        db, cursor = get_db_connection('additem') #okay sure ig
+        db, cursor = await get_db_connection('additem') #okay sure ig
         if displayname and itemid and cost and description and emoji:
             cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemid,))
             if cursor.fetchone():
@@ -54,7 +54,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def setitemcost(self, ctx, itemid, cost):
-        db, cursor = get_db_connection('setitemcost') #im too fucking lazy to do these
+        db, cursor = await get_db_connection('setitemcost') #im too fucking lazy to do these
         if itemid and cost:
             cursor.execute("UPDATE SHOPITEMS SET cost = %s WHERE itemid = %s", (cost, itemid))
             db.commit()
@@ -63,7 +63,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def givecoins(self, ctx, user, amt):
-        db, cursor = get_db_connection('givecoins') #im too fucking lazy to do these ones
+        db, cursor = await get_db_connection('givecoins') #im too fucking lazy to do these ones
 
         if not user or not amt:
            await ctx.reply("You need to specify a user and an amount!")
@@ -98,7 +98,7 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def fixbank(self, ctx):
-        db, cursor = get_db_connection('fixbank') #im too fucking lazy to do these ones
+        db, cursor = await get_db_connection('fixbank') #im too fucking lazy to do these ones
         cursor.execute("SELECT bankAmt, userID FROM USERDATA")
         bankdata = cursor.fetchall()
         for amt in bankdata:
@@ -122,7 +122,7 @@ class admincommands(commands.Cog):
     @commands.command(aliases=['casino'], hidden=True)
     @commands.check(isadmin)
     async def set_casino_money(self, ctx, amt):
-        db, cursor = get_db_connection('setcasinomoney') #im too fucking lazy to do these ones
+        db, cursor = await get_db_connection('setcasinomoney') #im too fucking lazy to do these ones
         cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = %s", (int(amt),))
         db.commit()
         await ctx.reply("okay")
@@ -130,14 +130,14 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def givebotrights(self, ctx):
-        db, cursor = get_db_connection('givebotrights') #im too fucking lazy to do these ones
+        db, cursor = await get_db_connection('givebotrights') #im too fucking lazy to do these ones
         cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)",(self.bot.user.id, 0, 0, 1000, "", 0, 1))
         db.commit()
 
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def adduser(self, ctx, userID):
-        db, cursor = get_db_connection('adduser') #im too fucking lazy to do these ones
+        db, cursor = await get_db_connection('adduser') #im too fucking lazy to do these ones
         if userID is None or type(userID) == int:
             await ctx.reply("You need to enter a userID to add.")
             return

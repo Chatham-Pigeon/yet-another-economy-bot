@@ -26,7 +26,7 @@ class itemcommands(commands.Cog):
 
     @commands.command(help="Lists shop items avaliable for purchase.")
     async def shop(self,ctx, shop_page: int = 1):
-        db, cursor = get_db_connection('shop') # EXCLUSIVE USE OF SHOPITEMS
+        db, cursor = await get_db_connection('shop') # EXCLUSIVE USE OF SHOPITEMS
         cursor.execute("SELECT * FROM SHOPITEMS")
         items = cursor.fetchall()
         items_per_page = 5
@@ -49,7 +49,7 @@ class itemcommands(commands.Cog):
     async def inventory(self, ctx, user=None):
         useritems = await user_items(ctx.author.id, 'inventory')
         useritems.pop(0)
-        db, cursor = get_db_connection('inventory') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
+        db, cursor = await get_db_connection('inventory') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
         if not useritems:
             await ctx.reply("User Items not found or you have none.")
             return
@@ -81,7 +81,7 @@ class itemcommands(commands.Cog):
         useritems = await user_items(ctx.author.id, 'buy')
         if not userdata:
             await ctx.reply("Failed to grab user data.")
-        db, cursor = get_db_connection('buy') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
+        db, cursor = await get_db_connection('buy') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
         cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemtobuy,))
         item = cursor.fetchone()
         await ctx.reply(item)
@@ -103,7 +103,7 @@ class itemcommands(commands.Cog):
     async def use(self, ctx, itemToUse):
         useritems = await user_items(ctx.author.id, 'use')
 
-        db, cursor = get_db_connection('use') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
+        db, cursor = await get_db_connection('use') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
         cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemToUse,))
         item = cursor.fetchone()
         if not item:

@@ -1,4 +1,5 @@
 import mysql
+from certifi import where
 from mysql.connector import Error
 import config
 from DISCORD_TOKEN import dbinfo
@@ -17,7 +18,7 @@ async def isadmin(ctx):
 
 
 async def dointerest(ctx):
-    db, cursor = get_db_connection()
+    db, cursor = await get_db_connection()
     cursor.execute("SELECT userID, bankAmt FROM USERDATA")
     userdata = cursor.fetchall()
     for user in userdata:
@@ -41,34 +42,35 @@ async def send_log(ctx, info=None):
     await ctx.bot.get_channel(config.CHANNEL_LOG).send(
         content=content)
 
-def get_db_connection(wherestarted=None):
+async def get_db_connection(wherestarted=None):
     """
     returns a database connection & cursor
     param 1: location of code where started (optional)
     """
     if wherestarted is None:
         wherestarted = "Undefined"
-
+    items = []
     if config.DB_CONNECTION is None: # always true on first connection
         config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
-        msg = f"DB connection initial connection successful"
-        return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
-    if config.DB_CONNECTION.is_connected(): #db is already first initalised and is connected and (hopefully) working
-        msg = f"DB return successful"
-        return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+        msg = f"DB connection initial connection successful: {wherestarted}"
+        items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+    elif config.DB_CONNECTION.is_connected(): #db is already first initalised and is connected and (hopefully) working
+        msg = f"DB return successful: {wherestarted}"
+        items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
     else:
         try:
             config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
             if config.DB_CONNECTION.is_connected: # db was previously disconnected and nnow reconnected
-                msg = f"DB reconnection successful"
-                return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+                msg = f"DB reconnection successful: {wherestarted}"
+                items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
             else: # db failed to reconnect
-                msg = "db failed to reconnect but didnt cause an exception"
+                msg = f"db failed to reconnect but didnt cause an exception: {wherestarted}"
         except:
-            msg = "DATABASE CONNECTION FAILED"
+            msg = f"DATABASE CONNECTION FAILED: {wherestarted}"
     if config.DEBUG == True:
         print(msg)
-        config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO ESTABLISH DB CONNECTION!! {msg}")
+        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO ESTABLISH DB CONNECTION!! {msg}, **: {wherestarted}**")
+    return items
 
 
 async def user_items(userId, wherefrom = 'Undefined') -> list:
@@ -78,7 +80,7 @@ async def user_items(userId, wherefrom = 'Undefined') -> list:
     returns a list of all the users items + their userID at the 0th index
     typically used in conjunction with update_user_items
     """
-    db, cursor = get_db_connection(f'user_items,, {wherefrom}')
+    db, cursor = await get_db_connection(f'user_items,, {wherefrom}')
     cursor.execute("SELECT boughtItems FROM USERDATA WHERE userID = %s", (userId,))
     itemstuple = cursor.fetchone()
     itemsstring = itemstuple[0]
@@ -93,7 +95,7 @@ async def update_user_items(itemlist: list, wherefrom = 'Undefined'):
     update a users bought items with items inside the list,
     likely you should pass a list with ALL the list items from the user_data function call
     """
-    db, cursor = get_db_connection(f'update_user_items,, {wherefrom}')
+    db, cursor = await get_db_connection(f'update_user_items,, {wherefrom}')
     userId = itemlist.pop(0)
     items = ' '.join(itemlist)
     cursor.execute("UPDATE USERDATA SET boughtItems = %s WHERE userID = %s", (items, userId))
@@ -108,7 +110,7 @@ async def user_data(userId, wherefrom ='Undefined'):
     typically in conjunction with update_user_data to grab & update data
     """
     try:
-        db, cursor = get_db_connection(f'user_data,, {wherefrom}')
+        db, cursor = await get_db_connection(f'user_data,, {wherefrom}')
         cursor.execute("SELECT * FROM USERDATA WHERE userID = %s", (userId,))
         userdata = cursor.fetchone()
         cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 's10052_economy' AND TABLE_NAME = 'USERDATA'")
@@ -129,7 +131,7 @@ async def update_user_data(userdict: dict, wherefrom ='Undefined'):
     update a users data with all data inside the dict,
     likely you should pass a dictionary with ALL the users data from user_data function call
     """
-    db, cursor = get_db_connection(f'update_user_data,, {wherefrom}')
+    db, cursor = await get_db_connection(f'update_user_data,, {wherefrom}')
     userID = userdict['userID']
     cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 's10052_economy' AND TABLE_NAME = 'USERDATA'")
     table_data = [row[0] for row in cursor.fetchall()]

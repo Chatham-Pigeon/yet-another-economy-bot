@@ -10,7 +10,7 @@ ROLE_TIMEOUT = 1239144809915093112
 
 #MISC
 CRIME_MESSAGES = ['Give me your coins!', 'I need those coins now!', 'Hand over your wallet.', 'Drop the coins!', 'Those coins are mine now!', 'Give up the coins!', 'Please kind sir hand over the oh so shiny coins, or else I shall have to attack you.', 'COINS, NOW', 'Pass me those shiny coins!',]
-DEBUG = False
+DEBUG = True
 STATIC_CREDITS = "Made by pookie pigeon"
 USER_JOJO = 743410497738506282
 USER_CHATHAM = 272534243899342849

@@ -11,7 +11,7 @@ from helperfunctions import get_db_connection, user_data, update_user_data
 
 
 async def get_casino_money():
-    db, cursor = get_db_connection('get_casino_money')
+    db, cursor = await get_db_connection('get_casino_money')
     cursor.execute("SELECT casinoPot FROM GLOBALVARIABLES")
     data = cursor.fetchone()
     return data[0]
@@ -137,7 +137,7 @@ class moneycommands(commands.Cog):
         if casinoMoney < 200:
             winChance = 25
 
-        db, cursor = get_db_connection('coinflip')  # EXCLUIVELY FOR THE USE OF CASINOPOT
+        db, cursor = await get_db_connection('coinflip')  # EXCLUIVELY FOR THE USE OF CASINOPOT
         if randomnum < winChance: # win
             userdata['walletAmt'] = userdata['walletAmt'] + betamt / 4
             cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (betamt / 4,))
@@ -193,7 +193,7 @@ class moneycommands(commands.Cog):
                 value -= 10
                 aces -= 1
             return value
-        db, cursor = get_db_connection('blackjack') # EXCLUSIVE USE FOR CASINOPOT
+        db, cursor = await get_db_connection('blackjack') # EXCLUSIVE USE FOR CASINOPOT
         async def blackjack_game(interaction):
             nonlocal player_hand, dealer_hand, deck
             if interaction.user != ctx.author:
@@ -323,7 +323,7 @@ class moneycommands(commands.Cog):
         if not userdata:
             await ctx.reply("User data was not found.")
             return
-        db, cursor = get_db_connection('mines')
+        db, cursor = await get_db_connection('mines')
 
         async def mines_game(interaction):
             nonlocal tiles, revealed, bombs, profit, is_game_over
@@ -471,7 +471,7 @@ class moneycommands(commands.Cog):
     @commands.command(help="Donates money to the casino.")
     async def donate(self, ctx, amt):
         userdata = await user_data(ctx.author.id, 'donate (to casinoPot)')
-        db, cursor = get_db_connection('donate (to casinoPot)') # EXCLUSIVE FOR USE BY CASINoPOT
+        db, cursor = await get_db_connection('donate (to casinoPot)') # EXCLUSIVE FOR USE BY CASINoPOT
         if not userdata:
             await ctx.reply("User data was not found.")
             return
