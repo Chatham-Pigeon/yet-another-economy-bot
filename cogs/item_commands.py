@@ -83,7 +83,8 @@ class itemcommands(commands.Cog):
             await ctx.reply("Failed to grab user data.")
         db, cursor = get_db_connection('buy') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
         cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemtobuy,))
-        item = cursor.fetchall()
+        item = cursor.fetchone()
+        await ctx.reply(item)
         if not item:
             await ctx.reply("Item not found.")
             return

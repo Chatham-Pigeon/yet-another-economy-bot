@@ -103,14 +103,14 @@ class admincommands(commands.Cog):
         bankdata = cursor.fetchall()
         for amt in bankdata:
             newamt = round(amt[0], 0)
-            ctx.reply(f'newamt + bankdata[1]')
+            await ctx.reply(f'newamt + bankdata[1]')
             cursor.execute("UPDATE USERDATA SET bankAmt = %s WHERE userID = %s", (newamt, amt[1]))
             db.commit()
         cursor.execute("SELECT walletAmt, userID FROM USERDATA")
         bankdata = cursor.fetchall()
         for amt in bankdata:
             newamt = round(amt[0], 0)
-            ctx.reply(f'newamt + bankdata[1]')
+            await ctx.reply(f'{newamt} + {bankdata[1]}')
             cursor.execute("UPDATE USERDATA SET walletAmt = %s WHERE userID = %s", (newamt, amt[1]))
             db.commit()
 

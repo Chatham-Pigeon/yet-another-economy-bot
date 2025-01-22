@@ -49,18 +49,26 @@ def get_db_connection(wherestarted=None):
     if wherestarted is None:
         wherestarted = "Undefined"
 
-    if config.DB_CONNECTION is None:
+    if config.DB_CONNECTION is None: # always true on first connection
         config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
+        msg = f"DB connection initial connection successful"
         return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
-    if config.DB_CONNECTION.is_connected():
+    if config.DB_CONNECTION.is_connected(): #db is already first initalised and is connected and (hopefully) working
+        msg = f"DB return successful"
         return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
     else:
         try:
             config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
-            if config.DB_CONNECTION.is_connected:
+            if config.DB_CONNECTION.is_connected: # db was previously disconnected and nnow reconnected
+                msg = f"DB reconnection successful"
                 return [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+            else: # db failed to reconnect
+                msg = "db failed to reconnect but didnt cause an exception"
         except:
-            print("DATABASE CONNECTION FAILED")
+            msg = "DATABASE CONNECTION FAILED"
+    if config.DEBUG == True:
+        print(msg)
+        config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO ESTABLISH DB CONNECTION!! {msg}")
 
 
 async def user_items(userId, wherefrom = 'Undefined') -> list:
