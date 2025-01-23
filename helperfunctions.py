@@ -52,24 +52,24 @@ async def get_db_connection(wherestarted=None):
     items = []
     if config.DB_CONNECTION is None: # always true on first connection
         config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
-        msg = f"DB connection initial connection successful: {wherestarted}"
+        msg = f"DB connection initial connection successful: **{wherestarted}**"
         items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
     elif config.DB_CONNECTION.is_connected(): #db is already first initalised and is connected and (hopefully) working
-        msg = f"DB return successful: {wherestarted}"
+        msg = f"DB return successful: **{wherestarted}**"
         items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
     else:
         try:
             config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
             if config.DB_CONNECTION.is_connected: # db was previously disconnected and nnow reconnected
-                msg = f"DB reconnection successful: {wherestarted}"
+                msg = f"DB reconnection successful: **{wherestarted}**"
                 items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
             else: # db failed to reconnect
-                msg = f"db failed to reconnect but didnt cause an exception: {wherestarted}"
+                msg = f"<@{config.USER_CHATHAM}> db failed to reconnect but didnt cause an exception: **{wherestarted}**"
         except:
-            msg = f"DATABASE CONNECTION FAILED: {wherestarted}"
+            msg = f" <@{config.USER_CHATHAM}> DB CONNECTION FAILED: **{wherestarted}**"
     if config.DEBUG == True:
         print(msg)
-        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO ESTABLISH DB CONNECTION!! {msg}, **: {wherestarted}**")
+        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f":water: :water: water: {msg}")
     return items
 
 

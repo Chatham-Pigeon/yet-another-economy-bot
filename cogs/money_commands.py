@@ -14,7 +14,7 @@ async def get_casino_money():
     db, cursor = await get_db_connection('get_casino_money')
     cursor.execute("SELECT casinoPot FROM GLOBALVARIABLES")
     data = cursor.fetchone()
-    return data[0]
+    return random.randint(243, 421)
 
 
 class moneycommands(commands.Cog):

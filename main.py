@@ -4,6 +4,7 @@ import datetime
 import random
 from datetime import timedelta
 import time
+import math
 
 from DISCORD_TOKEN import DISCORD_TOKEN
 import discord
@@ -25,6 +26,7 @@ useitem = itemcommands(bot)
 user_level_xp_cooldown = {}
 user_crime_command = {}
 last_command_time = {}
+bot_users_this_session = []
 
 
 
@@ -233,10 +235,10 @@ async def on_command_completion(ctx):
     if config.DEBUG is True:
         prev_time = last_command_time.pop(f"{ctx.author.id} {ctx.message.id}")
         time_difference = time.time() - prev_time
-        time_difference = round(time_difference, 0) * 1000
+        time_difference = math.trunc(time_difference * 1000)
         await ctx.reply(f"Pong! {time_difference}ms")
 
-@bot.command(help="Check your XP and Level")
+@bot.command(help="Check your XP and Lev    el")
 async def level(ctx):
     userdata = await user_data(ctx.author.id, 'level')
     maxXP = userdata['userLevel'] * 100
@@ -265,10 +267,13 @@ async def on_ready():
 
 @bot.check
 async def everyCommandCheck(ctx):
-    last_command_time[f"{ctx.author.id} {ctx.message.id}"] =    time.time()
+    last_command_time[f"{ctx.author.id} {ctx.message.id}"] = time.time()
+    if bot_users_this_session.__contains__(ctx.author.id):
+        return True
+    bot_users_this_session.append(ctx.author.id)
     userdata = await user_data(ctx.author.id, 'everyCommandCheck')
     if not userdata:
-        embed = discord.Embed(title="Welcome!", description="Hi! Welcome to a general purpose economy bot,\nAll your data should be initalised :3 have fun!")
+        embed = discord.Embed(title="Welcome!", description="Hi! Welcome to a general purpose economy bot,\nAll your data should be initalised :3 have fun! \n -# If you are receiving this message & you believe you already have data please @ chatham_pigeon, your data should be safe")
         await ctx.send(embed=embed)
         # Insert default values for the user
         try:
