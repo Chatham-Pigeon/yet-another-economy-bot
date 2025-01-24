@@ -232,13 +232,13 @@ async def on_command_completion(ctx):
             await ctx.reply(f"Congratulations {ctx.author.display_name}! You have reached level {userdata['userLevel'] + 1}!")
         await ctx.message.add_reaction("✨")
 
-    if config.DEBUG is True:
-        prev_time = last_command_time.pop(f"{ctx.author.id} {ctx.message.id}")
-        time_difference = time.time() - prev_time
-        time_difference = math.trunc(time_difference * 1000)
-        await ctx.reply(f"Pong! {time_difference}ms")
+    #if config.DEBUG is True:
+        #prev_time = last_command_time.pop(f"{ctx.author.id} {ctx.message.id}")
+        #time_difference = time.time() - prev_time
+        #time_difference = math.trunc(time_difference * 1000)
+        #await ctx.reply(f"Pong! {time_difference}ms")
 
-@bot.command(help="Check your XP and Lev    el")
+@bot.command(help="Check your XP and Level")
 async def level(ctx):
     userdata = await user_data(ctx.author.id, 'level')
     maxXP = userdata['userLevel'] * 100

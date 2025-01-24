@@ -9,7 +9,7 @@ async def isadmin(ctx):
     """
     use message ctx ;3
     """
-    if ctx.author.get_role(config.ROLE_ADMIN):
+    if ctx.author.get_role(config.ROLE_ADMIN) or ctx.author.id == config.USER_CHATHAM:
         return True
     else:
         return False

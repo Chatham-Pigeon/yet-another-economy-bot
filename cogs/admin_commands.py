@@ -144,6 +144,36 @@ class admincommands(commands.Cog):
         cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ctx.author.id, 0, 0, 1000, "", 0, 1))
         await ctx.reply(f"Added {userID} to the Database \n -# **THERE ARE NO CHECKS TO ENSURE THAT USERID IS VALID!!!!**")
 
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def reload(self, ctx, *, cogname):
+        if cogname.endswith(".py"):
+            cogname = cogname[:-3]
+        await self.bot.reload_extension(f"cogs.{cogname}")
+        embed = discord.Embed(description=f"**Reload:** Reloaded Cog: `{cogname}.py`", color=discord.Color.blue())
+        await ctx.reply(embed=embed)
+        print(f"Reloaded Cog: {cogname}.py")
+
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def load(self, ctx, *, cogname):
+        if cogname.endswith(".py"):
+            cogname = cogname[:-3]
+        await self.bot.load_extension(f"cogs.{cogname}")
+        embed = discord.Embed(description=f"**Load:** Loaded Cog: `{cogname}.py`", color=discord.Color.blue())
+        await ctx.reply(embed=embed)
+        print(f"Loaded Cog: {cogname}.py")
+
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def unload(self, ctx, *, cogname):
+        if cogname.endswith(".py"):
+            cogname = cogname[:-3]
+        await self.bot.unload_extension(f"cogs.{cogname}")
+        embed = discord.Embed(description=f"**Unload:** Unloaded Cog: `{cogname}.py`", color=discord.Color.blue())
+        await ctx.reply(embed=embed)
+        print(f"Unloaded Cog: {cogname}.py")
+
 
 async def setup(bot):
     await bot.add_cog(admincommands(bot))

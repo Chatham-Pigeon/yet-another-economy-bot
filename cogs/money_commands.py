@@ -13,8 +13,8 @@ from helperfunctions import get_db_connection, user_data, update_user_data
 async def get_casino_money():
     db, cursor = await get_db_connection('get_casino_money')
     cursor.execute("SELECT casinoPot FROM GLOBALVARIABLES")
-    data = cursor.fetchone()
-    return random.randint(243, 421)
+    data = cursor.fetchall()
+    return data[0][0]
 
 
 class moneycommands(commands.Cog):
@@ -103,6 +103,7 @@ class moneycommands(commands.Cog):
 
         userdata['walletAmt'] = userdata['walletAmt'] + amt
         userdata['bankAmt'] = userdata['bankAmt'] - amt
+        await update_user_data(userdata)
         await ctx.reply(f"You have successfully withdrawn {amt} coins from your bank!")
 
     @commands.command(aliases=['cf'], help="Gamble away! \n 10% House advantage. \n -# AGPDB Is not at fault for any losses for gambling. Gamble responsibly. ")
@@ -319,6 +320,7 @@ class moneycommands(commands.Cog):
     @commands.command(help="Plays a game of mines to earn some money.")
     @commands.cooldown(1, 30, BucketType.user)
     async def mines(self, ctx, betAmt):
+        await ctx.reply("sorry its a bit broken :(")
         userdata = await user_data(ctx.author.id, 'mines')
         if not userdata:
             await ctx.reply("User data was not found.")
