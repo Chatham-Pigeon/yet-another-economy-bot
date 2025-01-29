@@ -223,10 +223,11 @@ class admincommands(commands.Cog):
                 view_items['serverMute'].label = "Server Mute"
                 view_items['serverMute'].style = discord.ButtonStyle.red
             await interaction.message.edit(view=await createView(view_items))
-
-        async def disconnectUser(interaction):
+            await interaction.response.defer()
+        async def disconnectUser(interaction: discord.Interaction):
             await member.move_to(None)
-        async def changeDeafenState(interaction):
+            await interaction.response.defer()
+        async def changeDeafenState(interaction: discord.Interaction):
             if not member.voice.deaf:
                 await member.edit(deafen=True)
                 view_items['serverDeafen'].label = "Server Undeafen"
@@ -236,6 +237,9 @@ class admincommands(commands.Cog):
                 view_items['serverDeafen'].label = "Server Deafen"
                 view_items['serverDeafen'].style = discord.ButtonStyle.red
             await interaction.message.edit(view=await createView(view_items))
+            await interaction.response.defer()
+
+
 
         # except if victim not vcing
         try:
