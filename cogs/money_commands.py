@@ -7,7 +7,7 @@ import random
 from discord.ui import Button, View
 
 import config
-from helperfunctions import get_db_connection, user_data, update_user_data
+from helperfunctions import get_db_connection, user_data, update_user_data, user_items, update_user_items
 
 
 async def get_casino_money():
@@ -20,6 +20,63 @@ async def get_casino_money():
 class moneycommands(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(help="Rob the specified user, \n However, be careful it could backfire! \n2 Minute cooldown.")
+    @commands.cooldown(1, 120, BucketType.user)
+    async def rob(self, ctx, user):
+        # grab the discord user to rob, if user is none tell them their stupid
+        if user:
+            try:
+                victim = await commands.UserConverter().convert(ctx, user)
+            except commands.CommandError:
+                await ctx.reply("No user found, try @mention them.")
+                self.rob.reset_cooldown(ctx)
+                return
+        else:
+            await ctx.reply("You need to enter a user to rob.")
+            self.rob.reset_cooldown(ctx)
+            return
+
+        userdata = await user_data(ctx.author.id, 'rob robber')
+        useritems = await user_items(ctx.author.id, 'rob user items')
+
+        if not userdata:
+            await ctx.reply("Your user data not found.")
+            self.rob.reset_cooldown(ctx)
+            return
+
+        victimuserdata = await user_data(victim.id, 'rob victim')
+        if not userdata:
+            await ctx.reply("Victim's user data not found.")
+            self.rob.reset_cooldown(ctx)
+            return
+
+        if not useritems.__contains__("gun"):
+            await ctx.reply("Hey! no one is scared enough of you for that to work... Maybe you should purchase a gun.")
+            self.rob.reset_cooldown(ctx)
+            return
+        if not userdata['walletAmt'] >= 25:
+            await ctx.reply("You need atleast 25 coins to rob someone...")
+            self.rob.reset_cooldown(ctx)
+            return
+
+        if random.randint(1, 100) <= 50:  # success
+            coinsStolen = random.randint(1, userdata['walletAmt'])
+            userdata['walletAmt'] = userdata['walletAmt'] + coinsStolen
+            victimuserdata['walletAmt'] = victimuserdata['walletAmt'] - coinsStolen
+            await ctx.reply(
+                f"Good Job! {victim.name} was so scared of your gun they dropped {coinsStolen} coins and ran away!")
+        else:
+            # fail
+            coinsStolen = random.randint(1, userdata['walletAmt'] / 4)
+            userdata['walletAmt'] = userdata['walletAmt'] - coinsStolen
+            victimuserdata['walletAmt'] = victimuserdata['walletAmt'] + coinsStolen
+            useritems.remove('gun')
+            await ctx.reply(
+                f"You failed to rob them and shot yourself in the face... They stole {coinsStolen} coins from your wallet while you were unconscious.")
+        await update_user_data(userdata, 'rob user update')
+        await update_user_data(victimuserdata, 'rob victim update')
+        await update_user_items(useritems, 'rob lose item ')
 
     @commands.command(aliases=['bal', 'bank', 'wallet'], help="Displays specified users wallet & bank.")
     async def balance(self, ctx, user=None):
@@ -46,7 +103,6 @@ class moneycommands(commands.Cog):
 
     @commands.command(aliases=['dep'], help="Deposits the specified amount into your bank.")
     async def deposit(self, ctx, depositamt):
-        # TODO: if 'all' is specified deposit everything they can instead of complaining (if all would be over bankMax)
         userdata = await user_data(ctx.author.id, 'deposit')
         if not userdata:
             await ctx.reply("User data not found.")
