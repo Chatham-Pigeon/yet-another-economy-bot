@@ -1,9 +1,13 @@
 import datetime
+from code import interact
 
 import discord
+from asyncio import sleep
 from discord.ext import commands
+from discord.ui import Button, View
+
 import config
-from helperfunctions import isadmin, dointerest, get_db_connection
+from helperfunctions import isadmin, dointerest, get_db_connection, createView
 
 
 
@@ -173,6 +177,115 @@ class admincommands(commands.Cog):
         embed = discord.Embed(description=f"**Unload:** Unloaded Cog: `{cogname}.py`", color=discord.Color.blue())
         await ctx.reply(embed=embed)
         print(f"Unloaded Cog: {cogname}.py")
+
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def cm(self, ctx, userid):
+        try:
+            member = await ctx.guild.fetch_member(userid)
+        except:
+            msg = await ctx.reply("bad!")
+            await msg.delete()
+            return
+        if member.voice and member.voice.mute:
+            await member.edit(mute=False)
+        else:
+            await member.edit(mute=True)
+        await ctx.message.delete()
+
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def fw(self, ctx, userid):
+        view_items = {
+            'serverMute': Button(label="Not in VC", style=discord.ButtonStyle.gray, custom_id="Error!", disabled=True),
+            'serverDeafen': Button(label="Not in VC", style=discord.ButtonStyle.gray, custom_id="Error!", disabled=True),
+            'disconnect': Button(label="Disconnect", style=discord.ButtonStyle.red, custom_id="disconnect")
+            }
+        # data to show irrelevant if victim vcing
+        member: discord.Member = await ctx.guild.fetch_member(userid)
+        userPing = member
+        userNick = member.nick
+        userRoles: list = member.roles
+        userRoles.pop(0)
+        role_names = [role.mention for role in userRoles]  # Extract role names
+        formatted_roles = ", ".join(role_names)
+        userThumbnail = member.avatar.url
+        #i have to like reconstruct views that's really stupid
+
+        # button callback functions
+        async def changeMuteState(interaction: discord.Interaction):
+            if not member.voice.mute:
+                await member.edit(mute=True)
+                view_items['serverMute'].label = "Server Unmute"
+                view_items['serverMute'].style = discord.ButtonStyle.green
+            else:
+                await member.edit(mute=False)
+                view_items['serverMute'].label = "Server Mute"
+                view_items['serverMute'].style = discord.ButtonStyle.red
+            await interaction.message.edit(view=await createView(view_items))
+
+        async def disconnectUser(interaction):
+            await member.move_to(None)
+        async def changeDeafenState(interaction):
+            if not member.voice.deaf:
+                await member.edit(deafen=True)
+                view_items['serverDeafen'].label = "Server Undeafen"
+                view_items['serverDeafen'].style = discord.ButtonStyle.green
+            else:
+                await member.edit(deafen=False)
+                view_items['serverDeafen'].label = "Server Deafen"
+                view_items['serverDeafen'].style = discord.ButtonStyle.red
+            await interaction.message.edit(view=await createView(view_items))
+
+        # except if victim not vcing
+        try:
+            userCurrentChannel = member.voice.channel.id
+        except:
+            embed = discord.Embed(title=f"{userPing} ({userNick})",description=f"User not in Voice Chat\n\nRoles:\n{formatted_roles}",colour=0x00b0f4, timestamp=datetime.datetime.now())
+            embed.set_footer(text=config.STATIC_CREDITS)
+            embed.set_thumbnail(url=f"{userThumbnail}")
+            await ctx.reply(embed=embed)
+            return
+
+        #victim in vc data
+        if not member.voice.mute:
+            view_items['serverMute'] = Button(label="Server Mute", style=discord.ButtonStyle.red, custom_id="servermute")
+        if member.voice.mute:
+            userMuted = "Server Muted"
+            view_items['serverMute'] = Button(label="Server Unmute", style=discord.ButtonStyle.green, custom_id="serverunmute")
+        elif member.voice.self_mute:
+            userMuted = "Muted"
+        elif not member.voice.self_mute:
+            userMuted = "Unmuted"
+        else:
+            userMuted = "Error"
+        if not member.voice.deaf:
+            view_items['serverDeafen'] = Button(label="Server Deafen", style=discord.ButtonStyle.red, custom_id="serverdeafen")
+        if member.voice.deaf:
+            userDeafened = "Server Deafened"
+            view_items['serverDeafen'] = Button(label="Server Undeafen", style=discord.ButtonStyle.green, custom_id="serverundeafen")
+        elif member.voice.self_deaf:
+            userDeafened = "Deafened"
+        elif not member.voice.self_deaf:
+            userDeafened = "Undeafened"
+        else:
+            userDeafened = "Error"
+
+        embed = discord.Embed(title=f"{userPing} ({userNick})",description=f"Voice Chat State: {userMuted}, {userDeafened}\nVoice Channel: <#{userCurrentChannel}>\nRoles:\n{formatted_roles}",colour=0x00b0f4,timestamp=datetime.datetime.now())
+        embed.set_footer(text=config.STATIC_CREDITS)
+        embed.set_thumbnail(url=f"{userThumbnail}")
+
+        view = View()
+
+        for i in view_items.values():
+            view.add_item(i)
+        view_items['serverDeafen'].callback = changeDeafenState
+        view_items['disconnect'].callback = disconnectUser
+        view_items['serverMute'].callback = changeMuteState
+        await ctx.reply(embed=embed, view=view)
+
+
+
 
 
 async def setup(bot):

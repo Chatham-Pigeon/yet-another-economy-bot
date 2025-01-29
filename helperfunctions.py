@@ -1,5 +1,6 @@
+import discord.ui
 import mysql
-from certifi import where
+from discord.ui import View
 from mysql.connector import Error
 import config
 from DISCORD_TOKEN import dbinfo
@@ -142,4 +143,11 @@ async def update_user_data(userdict: dict, wherefrom ='Undefined'):
         query = f"UPDATE USERDATA SET {key} = %s WHERE userID = %s"
         cursor.execute(query, (value, userID))
     db.commit()
+
+async def createView(viewList: dict):
+    view: discord.ui.View = View()
+    for i in viewList.values():
+        view.add_item(i)
+    return view
+
 

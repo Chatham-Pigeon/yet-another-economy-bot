@@ -204,6 +204,8 @@ async def on_command_error(ctx, error):
         await ctx.reply("You don't have the required permissions to run this command.")
     elif isinstance(error, commands.CommandOnCooldown):
         await ctx.reply(f"This command is on cooldown. Try again in {round(error.retry_after, 1)} seconds.")
+    elif isinstance(error, commands.CheckFailure):
+        pass
     else:
         await ctx.reply(f"An error occurred: {error}")
     if not reaction:
@@ -211,6 +213,8 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_command_completion(ctx):
+    if ctx.command.cog_name == "admin_commands" or ctx.command.cog_name == "admincommands":
+        return
     await send_log(ctx, "")
     userdata = await user_data(ctx.author.id, 'command completion')
     if not userdata:

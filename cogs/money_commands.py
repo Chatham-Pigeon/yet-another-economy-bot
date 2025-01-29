@@ -320,7 +320,6 @@ class moneycommands(commands.Cog):
     @commands.command(help="Plays a game of mines to earn some money.")
     @commands.cooldown(1, 30, BucketType.user)
     async def mines(self, ctx, betAmt):
-        await ctx.reply("sorry its a bit broken :(")
         userdata = await user_data(ctx.author.id, 'mines')
         if not userdata:
             await ctx.reply("User data was not found.")
@@ -355,7 +354,7 @@ class moneycommands(commands.Cog):
                 db.commit()
                 return
 
-            profit += 0.2
+            profit += 0.1
             tiles[index].label = "✔"
             tiles[index].style = discord.ButtonStyle.green
             tiles[index].disabled = True
@@ -450,7 +449,7 @@ class moneycommands(commands.Cog):
         bombsCount = 1
         if casinoMoney < 200:
             bombsCount = 4
-        bombs = set(random.sample(range(9), bombsCount))  # Randomly assign 2 bomb locations
+        bombs = set(random.sample(range(9), bombsCount))  # Randomly assign 1 bomb location
         revealed = set()
         profit = 0.0
         is_game_over = False
