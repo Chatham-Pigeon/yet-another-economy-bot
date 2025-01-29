@@ -23,7 +23,6 @@ class moneycommands(commands.Cog):
 
     @commands.command(aliases=['bal', 'bank', 'wallet'], help="Displays specified users wallet & bank.")
     async def balance(self, ctx, user=None):
-
         if user:
             try:
                 user = await commands.UserConverter().convert(ctx, user)
