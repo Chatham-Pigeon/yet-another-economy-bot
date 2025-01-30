@@ -2,6 +2,7 @@
 import asyncio
 import datetime
 import random
+import traceback
 from datetime import timedelta
 import time
 import math
@@ -13,7 +14,7 @@ import discord
 from discord.ext import commands
 
 import config
-from helperfunctions import user_data, update_user_data, user_items, update_user_items
+from helperfunctions import user_data, update_user_data, user_items
 from helperfunctions import send_log
 from cogs.item_commands import itemcommands
 intents = discord.Intents.default()
@@ -100,6 +101,19 @@ async def on_command_error(ctx, error):
         pass
     else:
         await ctx.reply(f"An error occurred: {error}")
+        tb = traceback.format_exception(type(error), error, error.__traceback__)
+        tb_str = "".join(tb)  # Convert the traceback to a string
+
+        # Log the error with the line number and traceback
+        error_message = (
+            f"❌ **Error in command `{ctx.command}`:**\n"
+            f"```{error}```\n"
+            f"**Traceback:**\n"
+            f"```{tb_str}```"
+        )
+
+        # Send the error message to the channel (or log it)
+        await ctx.reply(error_message)
     if not reaction:
         await ctx.message.add_reaction("❌")
 

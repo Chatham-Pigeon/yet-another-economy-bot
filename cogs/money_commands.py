@@ -7,14 +7,14 @@ import random
 from discord.ui import Button, View
 
 import config
-from helperfunctions import get_db_connection, user_data, update_user_data, user_items, update_user_items
+from helperfunctions import get_db_connection, user_data, update_user_data, user_items, update_user_items, isadmin
 
 
 async def get_casino_money():
     db, cursor = await get_db_connection('get_casino_money')
     cursor.execute("SELECT casinoPot FROM GLOBALVARIABLES")
     data = cursor.fetchall()
-    return data[0][0]
+    return 100000 # disable casino Money feature
 
 
 class moneycommands(commands.Cog):
@@ -374,14 +374,14 @@ class moneycommands(commands.Cog):
 
     @commands.command(help="Plays a game of mines to earn some money.")
     @commands.cooldown(1, 30, BucketType.user)
-    async def mines(self, ctx, betAmt):
+    async def mines(self, ctx: discord.ext.commands.Context, betAmt):
         userdata = await user_data(ctx.author.id, 'mines')
         if not userdata:
             await ctx.reply("User data was not found.")
             return
         db, cursor = await get_db_connection('mines')
 
-        async def mines_game(interaction):
+        async def mines_game(interaction: discord.Interaction):
             nonlocal tiles, revealed, bombs, profit, is_game_over
             if interaction.user != ctx.author:
                 await interaction.response.send_message("You are not part of this game.", ephemeral=True)
@@ -401,7 +401,7 @@ class moneycommands(commands.Cog):
 
             if index in bombs: # lost
                 is_game_over = True
-                await interaction.response.edit_message(
+                await interaction.message.edit(
                     content=f"You clicked a bomb! Game over. You lost your bet of {betAmt} coins.",
                     view=None
                 )
@@ -414,25 +414,25 @@ class moneycommands(commands.Cog):
             tiles[index].style = discord.ButtonStyle.green
             tiles[index].disabled = True
 
-            if len(revealed) == 7:  # All good tiles revealed
+            if len(revealed) >=  9 - bombsCount:  # All good tiles revealed
                 is_game_over = True
                 winnings = betAmt * 2
                 userdata['walletAmt'] =  userdata['walletAmt'] + winnings + betAmt
                 await update_user_data(userdata, 'mines all tiles win')
-
+                print('MEOOW')
                 cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings + betAmt,))
                 db.commit()
-
-                await interaction.response.edit_message(
+                await interaction.message.edit(
                     content=f"Congratulations! You revealed all safe tiles and won {winnings} coins!",
                     view=None
                 )
                 return
-
-            await interaction.response.edit_message(
-                content=f"Current Profit Multiplier: {profit:.1f}x\nClick a tile or exit any time.",
+            coinsEstimate = betAmt + betAmt * profit
+            await interaction.message.edit(
+                content=f"Current Profit Multiplier: {profit:.1f}x, Estimated {coinsEstimate} coins. \n Click a tile or exit any time.",
                 view=view
             )
+            await interaction.response.defer()
 
         async def exit_game(interaction):
             nonlocal is_game_over

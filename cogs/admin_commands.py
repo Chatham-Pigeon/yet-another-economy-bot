@@ -178,20 +178,7 @@ class admincommands(commands.Cog):
         await ctx.reply(embed=embed)
         print(f"Unloaded Cog: {cogname}.py")
 
-    @commands.command(Hidden=True)
-    @commands.check(isadmin)
-    async def cm(self, ctx, userid):
-        try:
-            member = await ctx.guild.fetch_member(userid)
-        except:
-            msg = await ctx.reply("bad!")
-            await msg.delete()
-            return
-        if member.voice and member.voice.mute:
-            await member.edit(mute=False)
-        else:
-            await member.edit(mute=True)
-        await ctx.message.delete()
+
     @commands.command(Hidden=True)
     @commands.check(isadmin)
     async def lock(self, ctx: discord.ext.commands.Context):
