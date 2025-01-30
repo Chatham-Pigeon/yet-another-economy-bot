@@ -192,7 +192,19 @@ class admincommands(commands.Cog):
         else:
             await member.edit(mute=True)
         await ctx.message.delete()
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def lock(self, ctx: discord.ext.commands.Context):
+        permission: discord.Permissions = ctx.channel.permissions_for(ctx.guild.default_role)
+        overwrite = ctx.channel.overwrites_for(ctx.guild.default_role)
 
+        if permission.send_messages: # currently unlocked, make lockedd
+            setattr(overwrite, 'send_messages', False)
+            await ctx.message.add_reaction('🔒')
+        else: # currently locked (or erroed) make unlocked
+            setattr(overwrite, 'send_messages', True)
+            await ctx.message.add_reaction('🔓')
+        await ctx.channel.set_permissions(ctx.guild.default_role, overwrite=overwrite)
     @commands.command(Hidden=True)
     @commands.check(isadmin)
     async def fw(self, ctx, userid):

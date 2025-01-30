@@ -85,9 +85,15 @@ class moneygaincommands(commands.Cog):
         await ctx.reply(
             f"You want to commit a crime huh? okay then, send \n`{messagevalue}` in chat to try commit a crime.")
         config.user_crime_command[ctx.author.id] = messagevalue
-
-
+    @commands.command(help="Complete a challenge for some coins")
+    @commands.cooldown(1, 150, BucketType.user)
+    async def challenge(self, ctx: discord.ext.commands.Context):
+        reaction = config.emojis[random.randint(0, len(config.emojis))]
+        reactmessage = await ctx.reply(f"React with {reaction} to get some coins! ")
+        challenge_data = [reaction, reactmessage]
+        config.user_challenge_data[ctx.author.id] = challenge_data
 
 async def setup(bot):
     await bot.add_cog(moneygaincommands(bot))
-    pass
+
+

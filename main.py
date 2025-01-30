@@ -6,11 +6,11 @@ from datetime import timedelta
 import time
 import math
 
+from pyexpat.errors import messages
+
 from DISCORD_TOKEN import DISCORD_TOKEN
 import discord
 from discord.ext import commands
-from discord.ext.commands import BucketType
-from discord.ui import Button, View
 
 import config
 from helperfunctions import user_data, update_user_data, user_items, update_user_items
@@ -31,28 +31,28 @@ bot_users_this_session = []
 
 
 
-    async def triedcrime(self, ctx):
-        userdata = await user_data(ctx.author.id, 'triedcrime')
-        if not userdata:
-            await ctx.reply("User data not found.")
-            return
-        del config.user_crime_command[ctx.author.id]
-        r = random.randint(1, 1000)
-        coinsEarned = random.randint(120, 175)
-        if r <= 250:
-            await ctx.reply(f"You successfully robbed that old lady... She dropped {coinsEarned} coins though!")
-            userdata['walletAmt'] = userdata['walletAmt'] + coinsEarned
-        elif r <= 750:
-            await ctx.reply("You tried to mug someone, but they ran away too fast....")
-        elif r <= 999:
-            await ctx.reply(
-                f"As you attempted to pickpocket this guy, you realize he is much stronger than you... HE stole {coinsEarned} coins from you")
-            userdata['walletAmt'] = userdata['walletAmt'] - coinsEarned
-        elif r == 1000:
-            await ctx.reply(
-                "BRO YOU TRIED TO ROB AN UNDERCOVER COP \n HE ARRESTED YOU AND YOU LOST HALF UR BANK BALANCE LMFAOO")
-            userdata['bankAmt'] = userdata['bankAmt'] / 2
-        await update_user_data(userdata, 'triedcrime')
+async def triedcrime(self, ctx):
+    userdata = await user_data(ctx.author.id, 'triedcrime')
+    if not userdata:
+        await ctx.reply("User data not found.")
+        return
+    del config.user_crime_command[ctx.author.id]
+    r = random.randint(1, 1000)
+    coinsEarned = random.randint(120, 175)
+    if r <= 250:
+        await ctx.reply(f"You successfully robbed that old lady... She dropped {coinsEarned} coins though!")
+        userdata['walletAmt'] = userdata['walletAmt'] + coinsEarned
+    elif r <= 750:
+        await ctx.reply("You tried to mug someone, but they ran away too fast....")
+    elif r <= 999:
+        await ctx.reply(
+            f"As you attempted to pickpocket this guy, you realize he is much stronger than you... HE stole {coinsEarned} coins from you")
+        userdata['walletAmt'] = userdata['walletAmt'] - coinsEarned
+    elif r == 1000:
+        await ctx.reply(
+            "BRO YOU TRIED TO ROB AN UNDERCOVER COP \n HE ARRESTED YOU AND YOU LOST HALF UR BANK BALANCE LMFAOO")
+        userdata['bankAmt'] = userdata['bankAmt'] / 2
+    await update_user_data(userdata, 'triedcrime')
 
 @bot.command(help="Shows this help message.")
 async def help(ctx):
@@ -65,6 +65,23 @@ async def help(ctx):
                 inline=False
             )
     await ctx.send(embed=embed)
+@bot.event
+async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
+    if user.id == bot.user.id:
+        return
+    try:
+        message: discord.Message
+        intendedreaction, message = config.user_challenge_data[user.id]
+        if reaction.message.id == message.id:
+            if intendedreaction == reaction.emoji:
+                coinsEarned = random.randint(1, 250)
+                await message.edit(content=f'Good job! You earned {coinsEarned} for this activity')
+                userdata =  await user_data(user.id, 'reaction_add')
+                userdata['walletAmt'] =  userdata['walletAmt'] + coinsEarned
+                await update_user_data(userdata, 'reaction_add')
+                del config.user_challenge_data[user.id]
+    except:
+        pass
 
 
 @bot.event
@@ -94,7 +111,6 @@ async def on_command_completion(ctx):
     userdata = await user_data(ctx.author.id, 'command completion')
     if not userdata:
         await ctx.reply("Your user data not found.")
-        rob.reset_cooldown(ctx)
         return
 
     xpgainCooldown = user_level_xp_cooldown.get(ctx.author.id)
