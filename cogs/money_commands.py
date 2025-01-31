@@ -385,11 +385,9 @@ class moneycommands(commands.Cog):
             if interaction.user != ctx.author:
                 await interaction.response.send_message("You are not part of this game.", ephemeral=True)
                 return
-
             if is_game_over:
-                await interaction.response.send_message("The game is over. Please start a new one.", ephemeral=True)
+                await interaction.response.send_message("The game is over. Please start a new one. MINES_GAME", ephemeral=True)
                 return
-
             custom_id = interaction.data["custom_id"]
             index = int(custom_id.replace("tile_", ""))
             if index in revealed:
@@ -431,7 +429,6 @@ class moneycommands(commands.Cog):
                 content=f"Current Profit Multiplier: {profit:.1f}x, Estimated {coinsEstimate} coins. \n Click a tile or exit any time.",
                 view=view
             )
-            await interaction.response.defer()
 
         async def exit_game(interaction: discord.Interaction):
             nonlocal is_game_over
@@ -440,7 +437,7 @@ class moneycommands(commands.Cog):
                 return
 
             if is_game_over:
-                await interaction.response.send_message("The game is already over.", ephemeral=True)
+                await interaction.response.send_message("The game is already over. EXIT_GAME", ephemeral=True)
                 return
 
             is_game_over = True
