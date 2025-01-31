@@ -1,8 +1,6 @@
 import datetime
-from code import interact
 
 import discord
-from asyncio import sleep
 from discord.ext import commands
 from discord.ui import Button, View
 

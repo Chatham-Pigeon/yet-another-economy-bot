@@ -5,9 +5,6 @@ import random
 import traceback
 from datetime import timedelta
 import time
-import math
-
-from pyexpat.errors import messages
 
 from DISCORD_TOKEN import DISCORD_TOKEN
 import discord
@@ -17,6 +14,7 @@ import config
 from helperfunctions import user_data, update_user_data, user_items
 from helperfunctions import send_log
 from cogs.item_commands import itemcommands
+
 intents = discord.Intents.default()
 intents.message_content = True
 intents.messages = True
