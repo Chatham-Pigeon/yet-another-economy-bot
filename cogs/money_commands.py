@@ -419,11 +419,9 @@ class moneycommands(commands.Cog):
                 print('MEOOW')
                 cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings + betAmt,))
                 db.commit()
-                await interaction.message.edit(
-                    content=f"Congratulations! You revealed all safe tiles and won {winnings} coins!",
-                    view=None
-                )
+                await interaction.message.edit(content=f"Congratulations! You revealed all safe tiles and won {winnings} coins!", view=None)
                 return
+
             coinsEstimate = betAmt * profit
             await interaction.message.edit(
                 content=f"Current Profit Multiplier: {profit:.1f}x, Estimated {coinsEstimate} coins. \n Click a tile or exit any time.",
