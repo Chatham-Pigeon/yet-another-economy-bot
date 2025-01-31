@@ -84,7 +84,6 @@ class itemcommands(commands.Cog):
         db, cursor = await get_db_connection('buy') # USE FOR EXCLUSIVELY GETTING SHOPITEMS
         cursor.execute("SELECT * FROM SHOPITEMS WHERE itemid = %s", (itemtobuy,))
         item = cursor.fetchone()
-        await ctx.reply(item)
         if not item:
             await ctx.reply("Item not found.")
             return

@@ -30,7 +30,7 @@ bot_users_this_session = []
 
 
 
-async def triedcrime(self, ctx):
+async def triedcrime(ctx):
     userdata = await user_data(ctx.author.id, 'triedcrime')
     if not userdata:
         await ctx.reply("User data not found.")
