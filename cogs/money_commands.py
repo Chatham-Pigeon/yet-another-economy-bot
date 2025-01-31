@@ -387,7 +387,8 @@ class moneycommands(commands.Cog):
                 return
             if is_game_over:
                 await interaction.response.send_message("The game is over. Please start a new one. MINES_GAME", ephemeral=True)
-                return
+
+
             custom_id = interaction.data["custom_id"]
             index = int(custom_id.replace("tile_", ""))
             if index in revealed:
@@ -406,10 +407,7 @@ class moneycommands(commands.Cog):
                 db.commit()
                 return
 
-            profit += 0.1
-            tiles[index].label = "✔"
-            tiles[index].style = discord.ButtonStyle.green
-            tiles[index].disabled = True
+
 
             if len(revealed) >=  9 - bombsCount:  # All good tiles revealed
                 is_game_over = True
@@ -422,6 +420,10 @@ class moneycommands(commands.Cog):
                 await interaction.message.edit(content=f"Congratulations! You revealed all safe tiles and won {winnings} coins!", view=None)
                 return
 
+            profit += 0.1
+            tiles[index].label = "✔"
+            tiles[index].style = discord.ButtonStyle.green
+            tiles[index].disabled = True
             coinsEstimate = betAmt * profit
             await interaction.message.edit(
                 content=f"Current Profit Multiplier: {profit:.1f}x, Estimated {coinsEstimate} coins. \n Click a tile or exit any time.",
