@@ -426,7 +426,7 @@ class moneycommands(commands.Cog):
                     view=None
                 )
                 return
-            coinsEstimate = betAmt + betAmt * profit
+            coinsEstimate = betAmt * profit
             await interaction.message.edit(
                 content=f"Current Profit Multiplier: {profit:.1f}x, Estimated {coinsEstimate} coins. \n Click a tile or exit any time.",
                 view=view
@@ -449,8 +449,7 @@ class moneycommands(commands.Cog):
             await update_user_data(userdata, 'mines exit win')
             cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings,))
             db.commit()
-
-            await interaction.message.edit(content=f"You exited the game early! Your winnings are {winnings:.1f} coins.", view=None)
+            await interaction.response.edit(content=f"You exited the game early! Your winnings are {winnings:.1f} coins.", view=None)
 
         try:
             betAmt = int(betAmt)
