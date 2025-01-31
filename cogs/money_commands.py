@@ -447,7 +447,6 @@ class moneycommands(commands.Cog):
             await update_user_data(userdata, 'mines exit win')
             cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings,))
             db.commit()
-            await interaction.response.defer()
             await interaction.message.edit(content=f"You exited the game early! Your winnings are {winnings:.1f} coins.", view=None)
 
         try:
