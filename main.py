@@ -91,6 +91,7 @@ async def on_command_error(ctx, error):
         reaction = True
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.message.add_reaction("❔")
+        reaction = True
     elif isinstance(error, commands.MissingPermissions):
         await ctx.reply("You don't have the required permissions to run this command.")
     elif isinstance(error, commands.CommandOnCooldown):
