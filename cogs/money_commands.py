@@ -1,5 +1,4 @@
 import datetime
-
 import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType
@@ -434,7 +433,7 @@ class moneycommands(commands.Cog):
             )
             await interaction.response.defer()
 
-        async def exit_game(interaction):
+        async def exit_game(interaction: discord.Interaction):
             nonlocal is_game_over
             if interaction.user != ctx.author:
                 await interaction.response.send_message("You are not part of this game.", ephemeral=True)
@@ -447,13 +446,11 @@ class moneycommands(commands.Cog):
             is_game_over = True
             winnings = betAmt * profit
             userdata['walletAmt'] = userdata['walletAmt'] + winnings + betAmt
-            await update_user_data(userdata,'mines exit win')
+            await update_user_data(userdata, 'mines exit win')
             cursor.execute("UPDATE GLOBALVARIABLES SET casinoPot = casinoPot - %s", (winnings,))
             db.commit()
-            await interaction.response.edit_message(
-                content=f"You exited the game early! Your winnings are {winnings:.1f} coins.",
-                view=None
-            )
+
+            await interaction.message.edit(content=f"You exited the game early! Your winnings are {winnings:.1f} coins.", view=None)
 
         try:
             betAmt = int(betAmt)
@@ -546,11 +543,9 @@ class moneycommands(commands.Cog):
         db.commit()
         await ctx.reply(f"You have donated **{amt}** coins to the casino!")
 
-    """
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx, user, amt):
-        # too lazy to continue this too hard :(
-        user_data = await get_user_data(ctx, ['walletAmt'])
+        userdata = await user_data(ctx, ['walletAmt'])
         if user_data[0] < amt:
             await ctx.reply("You don't have enough money in your wallet for this.")
             return
@@ -561,16 +556,21 @@ class moneycommands(commands.Cog):
                 await ctx.reply("No user found, try @mention them.")
                 return
 
-        async def acceptgame_callback(interaction):
+        async def acceptgame_callback(interaction: discord.Interaction):
+                if not interaction.user.id == victim.id:
+                    return
                 custom_id = interaction.data['custom_id']
-                if custom_id == 'yes':
-                    pass
-                else:
+                if custom_id == 'no':
                     await interaction.response.edit_message(content=f"Sorry, <@{interaction.user.id}> doesn't want to play Rock Paper Scissors against you.", view=None)
+                    return
+
         yesButton = Button(label="Yes", style=discord.ButtonStyle.green, custom_id="Accept")
         noButton = Button(label="No", style=discord.ButtonStyle.red, custom_id="Decline")
-        await ctx.reply(f"Hey <@{user.id}>!, <@{ctx.author.id}> wants to play a game of Rock, Paper, Scissors against you for a bet of {amt}, do you want to?")
-    """
+        yesButton.callback = acceptgame_callback
+        view = View()
+        view.add_item(yesButton)
+        view.add_item(noButton)
+        await ctx.reply(content=f"Hey <@{user.id}>!, <@{ctx.author.id}> wants to play a game of Rock, Paper, Scissors against you for a bet of {amt}, do you want to?", view=view)
 
 
 

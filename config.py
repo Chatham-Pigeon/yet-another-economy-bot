@@ -4,9 +4,12 @@ CHANNEL_LOG = 982041162472915034
 CHANNEL_AGPDS_BOTCMDS = 1302851483108245525
 
 # roles
-ROLE_ADMIN = 1232232285722513441
-ROLE_DJ = 1303657331581648916
-ROLE_TIMEOUT = 1239144809915093112
+ROLE_ADMIN = 1334800621517148181
+ROLE_DJ = 1334798262435184720
+ROLE_TIMEOUT = 1334796459622662146
+
+USER_JOJO = 743410497738506282
+USER_CHATHAM = 272534243899342849
 
 #MISC
 CRIME_MESSAGES = ['Give me your coins!', 'I need those coins now!', 'Hand over your wallet.', 'Drop the coins!', 'Those coins are mine now!', 'Give up the coins!', 'Please kind sir hand over the oh so shiny coins, or else I shall have to attack you.', 'COINS, NOW', 'Pass me those shiny coins!',]
@@ -14,8 +17,7 @@ char_to_emoji = {'a': ':regional_indicator_a:', 'b': ':regional_indicator_b:', '
 emojis = ['‼️', '❗', '📛', '🆕', '🆓', '💢', '😡', '👾', '😄', '❤️', '🔥', '👍', '⭐', '🚀', '🎉', '👀', '🤔', '💯']
 DEBUG = False
 STATIC_CREDITS = "Made by pookie pigeon"
-USER_JOJO = 743410497738506282
-USER_CHATHAM = 272534243899342849
+
 CONFIG_BOT = None
 DB_CONNECTION = None
 
