@@ -427,6 +427,7 @@ class moneycommands(commands.Cog):
                 content=f"Current Profit Multiplier: {profit:.1f}x, Estimated {coinsEstimate} coins. \n Click a tile or exit any time.",
                 view=view
             )
+            await interaction.response.defer()
 
         async def exit_game(interaction: discord.Interaction):
             nonlocal is_game_over
