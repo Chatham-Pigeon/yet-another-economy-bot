@@ -546,8 +546,20 @@ class moneycommands(commands.Cog):
     async def leaderboard(self, ctx):
         db, cursor = await get_db_connection('leaderboard')
         cursor.execute("SELECT userID, walletAmt, bankAmt from USERDATA")
-        alldata = cursor.fetchall
-        await ctx.reply(alldata)
+        alldata = cursor.fetchall()
+        embed = discord.Embed(title="AGPEB Coins Leaderboard")
+        j = 0
+        for i in alldata:
+            j = j + 1
+            totalMoney = i[1] + i[2]
+            user: discord.User = await commands.UserConverter().convert(ctx, str(i[0]))
+            embed.add_field(name=f"{j} {user.display_name} ({totalMoney})",
+                            value="",
+                            inline=False)
+            if j > 10:
+                break
+        await ctx.reply(embed=embed)
+
 
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx, user, amt):

@@ -110,7 +110,7 @@ async def on_command_error(ctx, error):
             f"**Traceback:**\n"
             f"```{tb_str}```"
         )
-
+        print (error_message)
         # Send the error message to the channel (or log it)
         await ctx.reply(error_message)
     if not reaction:
