@@ -122,7 +122,7 @@ async def user_data(userId, wherefrom ='Undefined'):
         userdict['userID'] = userId
         return userdict
     except Exception as e:
-        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} 'IDK WHERE!!' \n")
+        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} '{wherefrom}' \n")
 
 
 async def update_user_data(userdict: dict, wherefrom ='Undefined'):

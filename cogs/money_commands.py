@@ -1,4 +1,6 @@
 import datetime
+from encodings.aliases import aliases
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import BucketType
@@ -349,7 +351,7 @@ class moneycommands(commands.Cog):
         except commands.CommandError:
             await ctx.reply("Could not find the payee.")
             return
-        payeeuserdata = await user_data(ctx.author.id, 'pay payee')
+        payeeuserdata = await user_data(victim.id, 'pay payee')
         if not userdata:
             await ctx.reply("Payee's user data was not found.")
             return
@@ -539,6 +541,10 @@ class moneycommands(commands.Cog):
         await update_user_data(userdata, 'casinoPot')
         db.commit()
         await ctx.reply(f"You have donated **{amt}** coins to the casino!")
+
+    @commands.command(help="Check Your standing in the coins leaderboard!", aliases=['lb',])
+    async def leaderboard(self, ctx):
+        pass
 
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx, user, amt):
