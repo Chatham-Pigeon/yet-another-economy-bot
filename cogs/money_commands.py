@@ -544,7 +544,10 @@ class moneycommands(commands.Cog):
 
     @commands.command(help="Check Your standing in the coins leaderboard!", aliases=['lb',])
     async def leaderboard(self, ctx):
-        pass
+        db, cursor = await get_db_connection('leaderboard')
+        cursor.execute("SELECT userID, walletAmt, bankAmt from USERDATA")
+        alldata = cursor.fetchall
+        await ctx.reply(alldata)
 
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx, user, amt):

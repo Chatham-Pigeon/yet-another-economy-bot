@@ -54,16 +54,16 @@ async def get_db_connection(wherestarted=None):
     if config.DB_CONNECTION is None: # always true on first connection
         config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
         msg = f"DB connection initial connection successful: **{wherestarted}**"
-        items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+        items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor(buffered=True)]
     elif config.DB_CONNECTION.is_connected(): #db is already first initalised and is connected and (hopefully) working
         msg = f"DB return successful: **{wherestarted}**"
-        items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+        items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor(buffered=True)]
     else:
         try:
             config.DB_CONNECTION = mysql.connector.connect(**dbinfo)
             if config.DB_CONNECTION.is_connected: # db was previously disconnected and nnow reconnected
                 msg = f"DB reconnection successful: **{wherestarted}**"
-                items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor()]
+                items = [config.DB_CONNECTION, config.DB_CONNECTION.cursor(buffered=True)]
             else: # db failed to reconnect
                 msg = f"<@{config.USER_CHATHAM}> db failed to reconnect but didnt cause an exception: **{wherestarted}**"
         except:
