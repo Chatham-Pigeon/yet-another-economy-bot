@@ -347,7 +347,7 @@ class moneycommands(commands.Cog):
             await ctx.reply("Your user data was not found.")
             return
         try:
-            user = await commands.UserConverter().convert(ctx, victim)
+            victim = await commands.UserConverter().convert(ctx, victim)
         except commands.CommandError:
             await ctx.reply("Could not find the payee.")
             return
@@ -371,7 +371,7 @@ class moneycommands(commands.Cog):
         payeeuserdata['walletAmt'] = payeeuserdata['walletAmt'] + amt
         await update_user_data(userdata, 'pay payer')
         await update_user_data(payeeuserdata, 'pay payee')
-        await ctx.reply(f"You paid {user.display_name} **{amt}** coins!")
+        await ctx.reply(f"You paid {victim.display_name} **{amt}** coins!")
 
     @commands.command(help="Plays a game of mines to earn some money.")
     @commands.cooldown(1, 30, BucketType.user)
