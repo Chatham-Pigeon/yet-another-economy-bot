@@ -11,6 +11,7 @@ import discord
 from discord.ext import commands
 
 import config
+from config import num_to_emoji
 from helperfunctions import user_data, update_user_data, user_items
 from helperfunctions import send_log
 from cogs.item_commands import itemcommands
@@ -93,9 +94,13 @@ async def on_command_error(ctx, error):
         await ctx.message.add_reaction("❔")
         reaction = True
     elif isinstance(error, commands.MissingPermissions):
-        await ctx.reply("You don't have the required permissions to run this command.")
+        await ctx.reply("You don't have the required permissions to run this command.", ephemeral=True)
     elif isinstance(error, commands.CommandOnCooldown):
-        await ctx.reply(f"This command is on cooldown. Try again in {round(error.retry_after, 1)} seconds.")
+        cooldown = str(round(error.retry_after, 0))[:-2]
+        for i in cooldown:
+            await ctx.message.add_reaction(config.num_to_emoji[i])
+        await ctx.message.add_reaction("🕒")
+        reaction = True
     elif isinstance(error, commands.CheckFailure):
         pass
     else:

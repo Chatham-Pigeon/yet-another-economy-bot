@@ -454,7 +454,7 @@ class moneycommands(commands.Cog):
         try:
             betAmt = int(betAmt)
         except ValueError:
-            await ctx.reply("Enter a number suitable for betting.")
+            await ctx.reply("Enter a number silly")
             self.mines.reset_cooldown(ctx)
             return
 
@@ -562,11 +562,20 @@ class moneycommands(commands.Cog):
 
 
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
-    async def rps(self, ctx, user, amt):
-        userdata = await user_data(ctx, ['walletAmt'])
-        if user_data[0] < amt:
+    async def rps(self, ctx: discord.ext.commands.Context, user, amt):
+        userdata = await user_data(ctx.author.id, 'rps')
+        if userdata['walletAmt'] < int(amt):
             await ctx.reply("You don't have enough money in your wallet for this.")
             return
+        try:
+            amt = int(amt)
+        except ValueError:
+            await ctx.reply("Enter a number silly")
+            return
+        if amt < 1:
+            await ctx.reply("You can't donate less than 1 coin.")
+            return
+
         if user:
             try:
                 victim = await commands.UserConverter().convert(ctx, user)
@@ -575,20 +584,40 @@ class moneycommands(commands.Cog):
                 return
 
         async def acceptgame_callback(interaction: discord.Interaction):
-                if not interaction.user.id == victim.id:
-                    return
-                custom_id = interaction.data['custom_id']
-                if custom_id == 'no':
-                    await interaction.response.edit_message(content=f"Sorry, <@{interaction.user.id}> doesn't want to play Rock Paper Scissors against you.", view=None)
-                    return
+            if not interaction.user.id == victim.id:
+                await interaction.response.send_message("You arent the recipient of this game invite", ephemeral=True)
+                return
+            custom_id = interaction.data['custom_id']
+            if custom_id == 'no':
+                await interaction.response.edit_message(content=f"Sorry, <@{interaction.user.id}> doesn't want to play Rock Paper Scissors against you.", view=None)
+                return
+            rockButton = Button(label="🪨", style=discord.ButtonStyle.primary, custom_id="Rock")
+            paperButton = Button(label="📝", style=discord.ButtonStyle.primary, custom_id="Paper")
+            scissorsButton = Button(label="✂️", style=discord.ButtonStyle.primary, custom_id="Scissors")
+            rockButton.callback = makerpschoice
+            paperButton.callback = makerpschoice
+            scissorsButton.callback = makerpschoice
+            view = View()
+            view.add_item(rockButton)
+            view.add_item(paperButton)
+            view.add_item(scissorsButton)
 
-        yesButton = Button(label="Yes", style=discord.ButtonStyle.green, custom_id="Accept")
+            await interaction.response.edit_message(content=f"Okay! Game on.", view=view)
+        async def makerpschoice(interaction: discord.Interaction):
+            custom_id = interaction.data['custom_id']
+            if not interaction.user.id == victim.id or not interaction.user.id == ctx.author.id:
+                await interaction.response.send_message("You arent part of this game!", ephemeral=True)
+                return
+            await interaction.response.send_message(f"Okay! You picked **{custom_id}**, lets wait for the other person to pick too.", ephemeral=True)
+
+        yesButton = Button(label="Yes", style=discord.ButtonStyle.success, custom_id="Accept")
         noButton = Button(label="No", style=discord.ButtonStyle.red, custom_id="Decline")
         yesButton.callback = acceptgame_callback
+        noButton.callback = acceptgame_callback
         view = View()
         view.add_item(yesButton)
         view.add_item(noButton)
-        await ctx.reply(content=f"Hey <@{user.id}>!, <@{ctx.author.id}> wants to play a game of Rock, Paper, Scissors against you for a bet of {amt}, do you want to?", view=view)
+        await ctx.reply(content=f"Hey <@{victim.id}>!, <@{ctx.author.id}> wants to play a game of Rock, Paper, Scissors against you for a bet of {amt} coins, do you want to?", view=view)
 
 
 
