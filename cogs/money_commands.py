@@ -1,5 +1,4 @@
 import datetime
-from encodings.aliases import aliases
 
 import discord
 from discord.ext import commands
@@ -563,8 +562,10 @@ class moneycommands(commands.Cog):
 
     @commands.command(help="Vs another user in Rock Paper Scissors!", hidden=True)
     async def rps(self, ctx: discord.ext.commands.Context, user, amt):
-        userdata = await user_data(ctx.author.id, 'rps')
-        if userdata['walletAmt'] < int(amt):
+        victimchoice: str = ""
+        authorchoice: str = ""
+        authordata = await user_data(ctx.author.id, 'rps')
+        if authordata['walletAmt'] < int(amt):
             await ctx.reply("You don't have enough money in your wallet for this.")
             return
         try:
@@ -578,10 +579,62 @@ class moneycommands(commands.Cog):
 
         if user:
             try:
-                victim = await commands.UserConverter().convert(ctx, user)
+                victim: discord.User = await commands.UserConverter().convert(ctx, user)
             except commands.CommandError:
                 await ctx.reply("No user found, try @mention them.")
                 return
+        victimdata  = await user_data(victim.id)
+        if victimdata['walletAmt'] < int(amt):
+            await ctx.reply("The other person doesn't have enough money for that.")
+            return
+        async def getwinner(victimschoice: str, authorschoice: str):
+            victimschoice.lower()
+            authorschoice.lower()
+            if victimschoice == authorschoice:
+                return "tie"
+            if victimschoice == 'rock' and authorschoice == 'scissors':
+                return "victim"
+            elif victimschoice == 'scissors' and authorschoice == 'paper':
+                return 'victim'
+            elif victimschoice == 'paper' and authorschoice == 'rock':
+                return 'victim'
+            else:
+                return 'author'
+
+        async def makerpschoice(interaction: discord.Interaction):
+            nonlocal victimchoice, authorchoice, victim, ctx, authordata
+            custom_id = interaction.data['custom_id']
+            if interaction.user.id == victim.id:
+                victimchoice = custom_id
+            elif interaction.user.id == ctx.author.id:
+                authorchoice = custom_id
+            else:
+                await interaction.response.send_message("You arent part of this game!", ephemeral=True)
+                return
+            if victimchoice and authorchoice:
+                await interaction.response.send_message(f"Okay! You picked **{custom_id}**.", ephemeral=True)
+                winner = await getwinner(victimchoice, authorchoice)
+                if winner == 'tie':
+                    await interaction.followup.edit_message(content="It's a tie!", view=None)
+                    return
+                elif winner == 'victim':
+                    await interaction.followup.edit_message(content=f"<@{victim.id}> Won {amt} coins!")
+                    victimdata['walletAmt'] = victimdata['walletAmt'] + amt
+                    await update_user_data(victimdata)
+                    authordata['walletAmt'] = authordata['walletAmt'] - amt
+                    await update_user_data(authordata)
+                elif winner == 'author':
+                    await interaction.followup.edit_message(content=f"<@{ctx.author.id}> Won {amt} coins!", view=None)
+                    authordata['walletAmt'] = authordata['walletAmt'] + amt
+                    await update_user_data(authordata)
+                    victimdata['walletAmt'] = victimdata['walletAmt'] - amt
+                    await update_user_data(victimdata)
+                return
+            else:
+                interaction.response.edit_message(f"Okay! Game on. \n The other player has picked.")
+
+            await interaction.response.send_message(f"Okay! You picked **{custom_id}**, lets wait for the other person to pick too.", ephemeral=True)
+
 
         async def acceptgame_callback(interaction: discord.Interaction):
             if not interaction.user.id == victim.id:
@@ -603,12 +656,7 @@ class moneycommands(commands.Cog):
             view.add_item(scissorsButton)
 
             await interaction.response.edit_message(content=f"Okay! Game on.", view=view)
-        async def makerpschoice(interaction: discord.Interaction):
-            custom_id = interaction.data['custom_id']
-            if not interaction.user.id == victim.id or not interaction.user.id == ctx.author.id:
-                await interaction.response.send_message("You arent part of this game!", ephemeral=True)
-                return
-            await interaction.response.send_message(f"Okay! You picked **{custom_id}**, lets wait for the other person to pick too.", ephemeral=True)
+
 
         yesButton = Button(label="Yes", style=discord.ButtonStyle.success, custom_id="Accept")
         noButton = Button(label="No", style=discord.ButtonStyle.red, custom_id="Decline")
