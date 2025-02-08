@@ -132,17 +132,21 @@ async def update_user_data(userdict: dict, wherefrom ='Undefined'):
     update a users data with all data inside the dict,
     likely you should pass a dictionary with ALL the users data from user_data function call
     """
-    db, cursor = await get_db_connection(f'update_user_data,, {wherefrom}')
-    userID = userdict['userID']
-    cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 's10052_economy' AND TABLE_NAME = 'USERDATA'")
-    table_data = [row[0] for row in cursor.fetchall()]
-    for key, value in userdict.items():
-        if not table_data.__contains__(key):
-            print("TRIED TO UPDATE NON EXISTANT USERDATA COLUMN ! ! !")
-            continue
-        query = f"UPDATE USERDATA SET {key} = %s WHERE userID = %s"
-        cursor.execute(query, (value, userID))
-    db.commit()
+    try:
+        db, cursor = await get_db_connection(f'update_user_data,, {wherefrom}')
+        userID = userdict['userID']
+        cursor.execute("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = 's10052_economy' AND TABLE_NAME = 'USERDATA'")
+        table_data = [row[0] for row in cursor.fetchall()]
+        for key, value in userdict.items():
+            if not table_data.__contains__(key):
+                print("TRIED TO UPDATE NON EXISTANT USERDATA COLUMN ! ! !")
+                continue
+            query = f"UPDATE USERDATA SET %s = %s WHERE userID = %s"
+            cursor.execute(query, (key, value, userID))
+        db.commit()
+    except Exception as e:
+        await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} '{wherefrom}' \n")
+
 
 async def createView(viewList: dict):
     view: discord.ui.View = View()
