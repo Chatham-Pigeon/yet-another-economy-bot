@@ -12,7 +12,7 @@ from discord.ext import commands
 
 import config
 from config import num_to_emoji
-from helperfunctions import user_data, update_user_data, user_items
+from helperfunctions import user_data, update_user_data, user_items, get_db_connection
 from helperfunctions import send_log
 from cogs.item_commands import itemcommands
 
@@ -141,9 +141,9 @@ async def on_command_completion(ctx):
             userdata['userLevel'] = userdata['userLevel'] + 1
             userdata['bankMax'] = 1000 + userdata['userLevel'] * 250
             userdata['currentXP'] = userdata['currentXP'] = 0
-            await update_user_data(userdata, 'command completion')
             await ctx.reply(f"Congratulations {ctx.author.display_name}! You have reached level {userdata['userLevel'] + 1}!")
         await ctx.message.add_reaction("✨")
+        await update_user_data(userdata, 'command completion')
 
     #if config.DEBUG is True:
         #prev_time = last_command_time.pop(f"{ctx.author.id} {ctx.message.id}")
@@ -191,16 +191,11 @@ async def everyCommandCheck(ctx):
         await ctx.send(embed=embed)
         # Insert default values for the user
         try:
-            userdata = {
-                'userID': ctx.author.id,
-                'walletAmt': 0,
-                'bankAmt': 0,
-                'bankMax': 1000,
-                'boughtItems': "",
-                'currentXP': 0,
-                'userLevel': 1
-            }
-            await update_user_data(userdata, 'everyCommandCheck (NEW USER)')
+            db, cursor = await get_db_connection("everycommand check (NEW USER)")
+            cursor.execute(
+                "INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                (ctx.author.id, 0, 0, 1000, "", 0, 1))
+            db.commit()
         except Exception as e:
             await ctx.reply(e)
     return True
