@@ -141,8 +141,8 @@ async def update_user_data(userdict: dict, wherefrom ='Undefined'):
             if not table_data.__contains__(key):
                 print("TRIED TO UPDATE NON EXISTANT USERDATA COLUMN ! ! !")
                 continue
-            query = f"UPDATE USERDATA SET %s = %s WHERE userID = %s"
-            cursor.execute(query, (key, value, userID))
+            query = f"UPDATE USERDATA SET {key} = %s WHERE userID = %s" # ddont replace {key} with %s it breaks for soemr reason
+            cursor.execute(query, (value, userID))
         db.commit()
     except Exception as e:
         await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f"<@{config.USER_CHATHAM}> :fire: :fire: :fire: FAILED TO GRAB USER DATA FOR REASON: {e} '{wherefrom}' \n")
