@@ -144,6 +144,7 @@ class admincommands(commands.Cog):
             await ctx.reply("You need to enter a userID to add.")
             return
         cursor.execute("INSERT INTO USERDATA(userID, walletAmt, bankAmt, bankMax, boughtItems, currentXP, userLevel) VALUES (%s, %s, %s, %s, %s, %s, %s)", (ctx.author.id, 0, 0, 1000, "", 0, 1))
+        db.commit()
         await ctx.reply(f"Added {userID} to the Database \n -# **THERE ARE NO CHECKS TO ENSURE THAT USERID IS VALID!!!!**")
 
     @commands.command(Hidden=True)
