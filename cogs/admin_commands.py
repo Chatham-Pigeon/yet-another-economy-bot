@@ -5,8 +5,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 
 import config
-from helperfunctions import isadmin, dointerest, get_db_connection, createView
-
+from helperfunctions import isadmin, dointerest, get_db_connection, createView, user_data
 
 
 class admincommands(commands.Cog):
@@ -84,13 +83,11 @@ class admincommands(commands.Cog):
             return
 
         try:
-            #user_data = await get_user_data(ctx, ['walletAmt'])
-            #if not user_data:
-                #await ctx.reply(f"User data not found for {user.display_name}.")
-                #return
-
-            cursor.execute("UPDATE USERDATA SET walletAmt = walletAmt + %s WHERE userID = %s", (amt, user.id))
-            db.commit()
+            userdata = await user_data(ctx, ['walletAmt'])
+            if not userdata:
+                await ctx.reply(f"User data not found for {user.display_name}.")
+                return
+            userdata['walletAmt'] = userdata['walletAmt'] + amt
             await ctx.reply(f"Successfully given {amt} coins to {user.display_name}!")
 
         except Exception as e:

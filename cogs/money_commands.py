@@ -61,7 +61,7 @@ class moneycommands(commands.Cog):
             return
 
         if random.randint(1, 100) <= 50:  # success
-            coinsStolen = random.randint(1, userdata['walletAmt'])
+            coinsStolen = random.randint(1, victimuserdata['walletAmt'])
             userdata['walletAmt'] = userdata['walletAmt'] + coinsStolen
             victimuserdata['walletAmt'] = victimuserdata['walletAmt'] - coinsStolen
             await ctx.reply(

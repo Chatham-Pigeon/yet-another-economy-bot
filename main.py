@@ -57,7 +57,11 @@ async def triedcrime(ctx):
 @bot.command(help="Shows this help message.")
 async def help(ctx):
     embed = discord.Embed(title="Help", description="Available commands and their usage:", color=discord.Color.blue())
+    i = 0
     for command in bot.commands:
+        i = i + 1
+        if i > 25:
+            break
         if not command.hidden:
             embed.add_field(
                 name=f"!{command.name} {command.signature}",
