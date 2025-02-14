@@ -27,9 +27,8 @@ user_level_xp_cooldown = {}
 last_command_time = {}
 bot_users_this_session = []
 
-
-
-
+class CustomCheckFailure(commands.CheckFailure):
+    pass
 
 async def triedcrime(ctx):
     userdata = await user_data(ctx.author.id, 'triedcrime')
@@ -91,7 +90,9 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
 @bot.event
 async def on_command_error(ctx, error):
     reaction = False
-    if isinstance(error, commands.CommandNotFound):
+    if isinstance(error, commands.customFailure):
+        pass
+    elif isinstance(error, commands.CommandNotFound):
         await ctx.message.add_reaction("❓")
         reaction = True
     elif isinstance(error, commands.MissingRequiredArgument):
@@ -163,10 +164,37 @@ async def level(ctx):
     embed.set_footer(text=f"{config.STATIC_CREDITS}")
     await ctx.reply(embed=embed)
 
+@bot.command(help="Show unqiue stats about the bot!")
+async def botstats(ctx):
+    # TODO: finish this lol im a bit silly, database values exist never used, need to begin updating all values.
+    db, cursor = await get_db_connection("botstats")
+    await ctx.reply("Disabled sorry :(")
+    return
+    cursor.execute("SELECT walletAmt FROM USERDATA")
+    alldata: list = cursor.fetchall()
+    uniqueUsersCount = alldata.count()
+    embed = discord.Embed(title="Bot Stats",timestamp=datetime.now())
 
-@bot.command(Hidden=True)
-async def test(ctx):
-    await user_items(ctx.author.id)
+    embed.add_field(name=f"Coins spent on items {coinsSpentOnItems}",
+                    value="",
+                    inline=False)
+    embed.add_field(name=f"Total coins robbed {coinsRobbed}",
+                    value="",
+                    inline=False)
+    embed.add_field(name=f"Total coins gained from gambling {coinsGambling}",
+                    value="",
+                    inline=False)
+    embed.add_field(name=f"Total coins lost from gambling {lostGambling}",
+                    value="",
+                    inline=False)
+    embed.add_field(name=f"Number of unqiue users {uniqueUsersCount}",
+                    value="",
+                    inline=False)
+    embed.add_field(name=f"Total Coins ever created {totalCoins}",
+                    value="",
+                    inline=False)
+    embed.set_footer(text=f"{config.STATIC_CREDITS}")
+    await ctx.send(embed=embed)
 
 @bot.event
 async def on_message(message):
@@ -181,10 +209,34 @@ async def on_message(message):
 @bot.event
 async def on_ready():
     await bot.get_channel(config.CHANNEL_AGPDS_BOTCMDS).send(":white_check_mark: Bot Ready!")
+    db, cursor = await get_db_connection("on ready")
+    cursor.execute("SELECT walletAmt, bankAmt FROM USERDATA")
+    alldata = cursor.fetchall()
+    totalCoins = 0
+    for i in alldata:
+        for j in i:
+            if j > 0:
+                totalCoins = totalCoins + j
+    await bot.get_channel(config.CHANNEL_AGPDS_BOTCMDS).send(f"{alldata}")
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching ,name=f"an economy with {totalCoins} coins!"))
+    cursor.execute("CREATE TABLE IF NOT EXISTS BANNEDUSERS(userID BIGINT)")
+    cursor.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT, allCoinsRobbed INT, TotalSpentOnItems INT, allGamblingCoins INT, allGamblingLost INT, allCoinsCreated INT)")
+    db.commit()
+    cursor.execute("SELECT * FROM BANNEDUSERS")
+    alldata = cursor.fetchall()
+    for i in alldata:
+        config.banned_users_cache.append(i[0])
+    await bot.get_channel(config.CHANNEL_AGPDS_BOTCMDS).send(config.banned_users_cache)
+
     print("Bot ready!")
 
+
+
+
 @bot.check
-async def everyCommandCheck(ctx):
+async def everyCommandCheck(ctx: discord.ext.commands.Context):
+    if config.banned_users_cache.__contains__(ctx.author.id):
+        raise ("You are banned from the bot!")
     last_command_time[f"{ctx.author.id} {ctx.message.id}"] = time.time()
     if bot_users_this_session.__contains__(ctx.author.id):
         return True
@@ -212,9 +264,10 @@ async def main():
             print(f"{extension} loaded successfully.")
         except Exception as e:
             print(f"Failed to load extension {extension}: {e}")
-    #cursor.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT)")
+    #cursor.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT, allCoinsRobbed INT, TotalSpentOnItems INT, allGamblingCoins INT, allGamblingLost INT, allCoinsCreated INT)")
     #cursor.execute("CREATE TABLE IF NOT EXISTS USERDATA(userID BIGINT, walletAmt INT, bankAmt INT, bankMax INT, boughtItems varchar(255), currentXP INT, userLevel INT)")
     #cursor.execute("CREATE TABLE IF NOT EXISTS SHOPITEMS(displayname varchar(255), itemid varchar(255), cost INT, description varchar(255), emoji varchar(255))")
+
 
 
 asyncio.run(main())

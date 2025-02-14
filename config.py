@@ -18,6 +18,7 @@ num_to_emoji = { '0': '0️⃣', '1': '1️⃣', '2': '2️⃣', '3': '3️⃣',
 emojis = ['‼️', '❗', '📛', '🆕', '🆓', '💢', '😡', '👾', '😄', '❤️', '🔥', '👍', '⭐', '🚀', '🎉', '👀', '🤔', '💯']
 DEBUG = True
 STATIC_CREDITS = "Made by pookie pigeon"
+banned_users_cache = []
 
 CONFIG_BOT = None
 DB_CONNECTION = None

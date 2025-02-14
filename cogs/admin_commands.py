@@ -144,6 +144,36 @@ class admincommands(commands.Cog):
         db.commit()
         await ctx.reply(f"Added {userID} to the Database \n -# **THERE ARE NO CHECKS TO ENSURE THAT USERID IS VALID!!!!**")
 
+    @commands.command(hidden=True)
+    @commands.check(isadmin)
+    async def ban(self, ctx, userid):
+        db, cursor = await get_db_connection("banuser")
+        try:
+            user: discord.User = await commands.UserConverter().convert(ctx, userid)
+        except commands.CommandError:
+            await ctx.reply("Could not find the specified user.")
+            return
+        cursor.execute("INSERT INTO BANNEDUSERS(userID) VALUES (%s)", (userid,))
+        config.banned_users_cache.append(int(userid))
+        await ctx.reply(f"Okay i might of banned {user.display_name} lol")
+
+    @commands.command(hidden=True)
+    @commands.check(isadmin)
+    async def unban(self, ctx, userid):
+        db, cursor = await get_db_connection("banuser")
+        try:
+            user: discord.User = await commands.UserConverter().convert(ctx, userid)
+        except commands.CommandError:
+            await ctx.reply("Could not find the specified user.")
+            return
+        cursor.execute("DELETE FROM BANNEDUSERS WHERE userID = %s", (userid,))
+        config.banned_users_cache.remove(int(userid))
+        await ctx.reply(f"Okay i probably unbanned {user.display_name} lol")
+
+    @commands.command(Hidden=True)
+    @commands.check(isadmin)
+    async def banlist(self, ctx):
+        await ctx.reply(config.banned_users_cache)
     @commands.command(Hidden=True)
     @commands.check(isadmin)
     async def reload(self, ctx, *, cogname):
