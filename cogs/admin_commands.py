@@ -80,7 +80,7 @@ class admincommands(commands.Cog):
             return
 
         try:
-            userdata = await user_data(ctx.author.id, 'givecoins')
+            userdata = await user_data(user.id, 'givecoins')
             if not userdata:
                 await ctx.reply(f"User data not found for {user.display_name}.")
                 return
