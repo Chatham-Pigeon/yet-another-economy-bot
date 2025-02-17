@@ -5,7 +5,7 @@ from discord.ext import commands
 from discord.ui import Button, View
 
 import config
-from helperfunctions import isadmin, dointerest, get_db_connection, createView, user_data
+from helperfunctions import isadmin, dointerest, get_db_connection, createView, user_data, update_user_data
 
 
 class admincommands(commands.Cog):
@@ -64,8 +64,6 @@ class admincommands(commands.Cog):
     @commands.command(hidden=True)
     @commands.check(isadmin)
     async def givecoins(self, ctx, user, amt):
-        db, cursor = await get_db_connection('givecoins') #im too fucking lazy to do these ones
-
         if not user or not amt:
            await ctx.reply("You need to specify a user and an amount!")
            return
@@ -75,7 +73,6 @@ class admincommands(commands.Cog):
         except commands.CommandError:
             await ctx.reply("Could not find the specified user.")
             return
-
         try:
             amt = int(amt)
         except ValueError:
@@ -83,13 +80,13 @@ class admincommands(commands.Cog):
             return
 
         try:
-            userdata = await user_data(ctx, ['walletAmt'])
+            userdata = await user_data(ctx, 'givecoins')
             if not userdata:
                 await ctx.reply(f"User data not found for {user.display_name}.")
                 return
             userdata['walletAmt'] = userdata['walletAmt'] + amt
             await ctx.reply(f"Successfully given {amt} coins to {user.display_name}!")
-
+            await update_user_data(userdata)
         except Exception as e:
             await ctx.reply(f"An error occurred: {e}")
 
