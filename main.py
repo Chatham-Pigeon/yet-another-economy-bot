@@ -90,9 +90,7 @@ async def on_reaction_add(reaction: discord.Reaction, user: discord.User):
 @bot.event
 async def on_command_error(ctx, error):
     reaction = False
-    if isinstance(error, commands.customFailure):
-        pass
-    elif isinstance(error, commands.CommandNotFound):
+    if isinstance(error, commands.CommandNotFound):
         await ctx.message.add_reaction("❓")
         reaction = True
     elif isinstance(error, commands.MissingRequiredArgument):
@@ -217,7 +215,6 @@ async def on_ready():
         for j in i:
             if j > 0:
                 totalCoins = totalCoins + j
-    await bot.get_channel(config.CHANNEL_AGPDS_BOTCMDS).send(f"{alldata}")
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching ,name=f"an economy with {totalCoins} coins!"))
     cursor.execute("CREATE TABLE IF NOT EXISTS BANNEDUSERS(userID BIGINT)")
     cursor.execute("CREATE TABLE IF NOT EXISTS GLOBALVARIABLES(casinoPot INT, allCoinsRobbed INT, TotalSpentOnItems INT, allGamblingCoins INT, allGamblingLost INT, allCoinsCreated INT)")
@@ -226,7 +223,6 @@ async def on_ready():
     alldata = cursor.fetchall()
     for i in alldata:
         config.banned_users_cache.append(i[0])
-    await bot.get_channel(config.CHANNEL_AGPDS_BOTCMDS).send(config.banned_users_cache)
 
     print("Bot ready!")
 
