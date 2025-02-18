@@ -231,35 +231,45 @@ class admincommands(commands.Cog):
         userRoles.pop(0)
         role_names = [role.mention for role in userRoles]  # Extract role names
         formatted_roles = ", ".join(role_names)
-        userThumbnail = member.avatar.url
+        if member.avatar.url is not None:
+            userThumbnail = member.avatar.url
         #i have to like reconstruct views that's really stupid
 
         # button callback functions
         async def changeMuteState(interaction: discord.Interaction):
-            if not member.voice.mute:
-                await member.edit(mute=True)
-                view_items['serverMute'].label = "Server Unmute"
-                view_items['serverMute'].style = discord.ButtonStyle.green
-            else:
-                await member.edit(mute=False)
-                view_items['serverMute'].label = "Server Mute"
-                view_items['serverMute'].style = discord.ButtonStyle.red
-            await interaction.message.edit(view=await createView(view_items))
-            await interaction.response.defer()
+            try:
+                if not member.voice.mute:
+                    await member.edit(mute=True)
+                    view_items['serverMute'].label = "Server Unmute"
+                    view_items['serverMute'].style = discord.ButtonStyle.green
+                else:
+                    await member.edit(mute=False)
+                    view_items['serverMute'].label = "Server Mute"
+                    view_items['serverMute'].style = discord.ButtonStyle.red
+                await interaction.message.edit(view=await createView(view_items))
+                await interaction.response.defer()
+            except:
+                await ctx.reply("I DONT HAVE RIGHTS")
         async def disconnectUser(interaction: discord.Interaction):
-            await member.move_to(None)
-            await interaction.response.defer()
+            try:
+                await member.move_to(None)
+                await interaction.response.defer()
+            except:
+                await ctx.reply("I DONT HAVE RIGHTS")
         async def changeDeafenState(interaction: discord.Interaction):
-            if not member.voice.deaf:
-                await member.edit(deafen=True)
-                view_items['serverDeafen'].label = "Server Undeafen"
-                view_items['serverDeafen'].style = discord.ButtonStyle.green
-            else:
-                await member.edit(deafen=False)
-                view_items['serverDeafen'].label = "Server Deafen"
-                view_items['serverDeafen'].style = discord.ButtonStyle.red
-            await interaction.message.edit(view=await createView(view_items))
-            await interaction.response.defer()
+            try:
+                if not member.voice.deaf:
+                    await member.edit(deafen=True)
+                    view_items['serverDeafen'].label = "Server Undeafen"
+                    view_items['serverDeafen'].style = discord.ButtonStyle.green
+                else:
+                    await member.edit(deafen=False)
+                    view_items['serverDeafen'].label = "Server Deafen"
+                    view_items['serverDeafen'].style = discord.ButtonStyle.red
+                await interaction.message.edit(view=await createView(view_items))
+                await interaction.response.defer()
+            except:
+                await ctx.reply("I DONT HAVE RIGHTS")
 
 
 
