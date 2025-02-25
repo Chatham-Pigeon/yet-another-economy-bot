@@ -126,7 +126,7 @@ async def on_command_error(ctx, error):
 
 @bot.event
 async def on_command_completion(ctx):
-    if ctx.command.cog_name == "admin_commands" or ctx.command.cog_name == "admincommands":
+    if ctx.command.cog_name == "admin_commands" or ctx.command.cog_name == "admincommands" or ctx.command.cog_name == "siege_commands" or ctx.command.cog_name == "siegecommands":
         return
     await send_log(ctx, "")
     userdata = await user_data(ctx.author.id, 'command completion')
@@ -252,7 +252,7 @@ async def everyCommandCheck(ctx: discord.ext.commands.Context):
             await ctx.reply(e)
     return True
 
-initial_extensions = ['cogs.money_commands', 'cogs.admin_commands', 'cogs.item_commands', 'cogs.moneygain_commands']
+initial_extensions = ['cogs.money_commands', 'cogs.admin_commands', 'cogs.item_commands', 'cogs.moneygain_commands', 'cogs.siege_commands']
 async def main():
     for extension in initial_extensions:
         try:
