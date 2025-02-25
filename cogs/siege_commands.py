@@ -1,11 +1,9 @@
 import datetime
-from gc import enable
 
 from discord.ext import commands
 import discord
 
 from siegeapi import Auth
-import asyncio
 
 from DISCORD_TOKEN import UBI_PW, UBI_EMAIL
 from config import STATIC_CREDITS
@@ -16,20 +14,13 @@ class siege_commands(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def r6stats(self, ctx, user: str):
+    async def r6stats(self, ctx, user: str, extra = None):
         auth = Auth(UBI_EMAIL, UBI_PW)
         player = await auth.get_player(name=f"{user}")
         await player.load_persona()
         await player.load_playtime()
         await player.load_ranked_v2()
         await player.load_progress()
-        # await player.load_maps() broken
-        #await player.load_summaries() broken
-        #await player.load_trends() broken
-        #await player.load_weapons() broken
-        #await player.load_operators() broken
-        # await player.load_skill_records() broken
-        #await player.load_linked_accounts() broke
         enabled = ""
         if player.persona.enabled is False:
             enabled = "(Disabled)"
@@ -47,10 +38,11 @@ class siege_commands(commands.Cog):
                         inline=False)
         embed.add_field(name=f"{player.ranked_profile.season_code} Stats",
                         value=f"Kills: {player.ranked_profile.kills} \n Deaths: {player.ranked_profile.deaths} \n KDR: {round(player.ranked_profile.kills / player.ranked_profile.deaths, 2)} \n Wins: {player.ranked_profile.wins} \n Losses: {player.ranked_profile.losses} \n WLR: {round(player.ranked_profile.wins / player.ranked_profile.losses, 2)} \n Abandons: {player.ranked_profile.abandons} \n")
-        embed.add_field(name="Misc", value=f"{player.casual_profile}")
         embed.set_thumbnail(url=f"{player.profile_pic_url}")
         embed.set_footer(text=f"{STATIC_CREDITS}")
         await ctx.reply(embed=embed)
+        if extra is not None:
+            await ctx.reply(f"**EXTRA DATA** \n  Casual data dump: {player.casual_profile} \n Event data dump: {player.event_profile} \n: {player}")
         await auth.close()
 
 async def setup(bot):
