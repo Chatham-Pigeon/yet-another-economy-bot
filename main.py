@@ -11,8 +11,7 @@ import discord
 from discord.ext import commands
 
 import config
-from config import num_to_emoji
-from helperfunctions import user_data, update_user_data, user_items, get_db_connection
+from helperfunctions import user_data, update_user_data, get_db_connection
 from helperfunctions import send_log
 from cogs.item_commands import itemcommands
 
@@ -44,12 +43,10 @@ async def triedcrime(ctx):
     elif r <= 750:
         await ctx.reply("You tried to mug someone, but they ran away too fast....")
     elif r <= 999:
-        await ctx.reply(
-            f"As you attempted to pickpocket this guy, you realize he is much stronger than you... HE stole {coinsEarned} coins from you")
+        await ctx.reply(f"As you attempted to pickpocket this guy, you realize he is much stronger than you... HE stole {coinsEarned} coins from you")
         userdata['walletAmt'] = userdata['walletAmt'] - coinsEarned
     elif r == 1000:
-        await ctx.reply(
-            "BRO YOU TRIED TO ROB AN UNDERCOVER COP \n HE ARRESTED YOU AND YOU LOST HALF UR BANK BALANCE LMFAOO")
+        await ctx.reply("BRO YOU TRIED TO ROB AN UNDERCOVER COP \n HE ARRESTED YOU AND YOU LOST HALF UR BANK BALANCE LMFAOO")
         userdata['bankAmt'] = userdata['bankAmt'] / 2
     await update_user_data(userdata, 'triedcrime')
 
@@ -65,7 +62,7 @@ async def help(ctx):
             embed.add_field(
                 name=f"!{command.name} {command.signature}",
                 value=command.help or "No description provided.",
-                inline=False
+                inline=True
             )
     await ctx.send(embed=embed)
 @bot.event
@@ -252,7 +249,7 @@ async def everyCommandCheck(ctx: discord.ext.commands.Context):
             await ctx.reply(e)
     return True
 
-initial_extensions = ['cogs.money_commands', 'cogs.admin_commands', 'cogs.item_commands', 'cogs.moneygain_commands', 'cogs.siege_commands']
+initial_extensions = ['cogs.money_commands', 'cogs.admin_commands', 'cogs.item_commands', 'cogs.moneygain_commands', 'cogs.api_commands']
 async def main():
     for extension in initial_extensions:
         try:

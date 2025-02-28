@@ -3,6 +3,7 @@ import datetime
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
+from webtest import Hidden
 
 import config
 from helperfunctions import isadmin, dointerest, get_db_connection, createView, user_data, update_user_data
@@ -171,6 +172,8 @@ class admincommands(commands.Cog):
     @commands.check(isadmin)
     async def banlist(self, ctx):
         await ctx.reply(config.banned_users_cache)
+
+
     @commands.command(Hidden=True)
     @commands.check(isadmin)
     async def reload(self, ctx, *, cogname):

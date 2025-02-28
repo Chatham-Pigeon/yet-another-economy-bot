@@ -1,9 +1,11 @@
 import datetime
 
+from chessdotcom import ChessDotComClient
 from discord.ext import commands
 import discord
 
 from siegeapi import Auth
+
 
 from DISCORD_TOKEN import UBI_PW, UBI_EMAIL
 from config import STATIC_CREDITS
@@ -44,6 +46,13 @@ class siege_commands(commands.Cog):
         if extra is not None:
             await ctx.reply(f"**EXTRA DATA** \n  Casual data dump: {player.casual_profile} \n Event data dump: {player.event_profile} \n: {player}")
         await auth.close()
+
+    @commands.command()
+    async def chessstats(self, ctx, user, extra = None):
+        auth = ChessDotComClient(user_agent = "private discord bot semi stat tracker, chess.com username is Chatham_Pigeon")
+        data = auth.get_player_profile("fabianocaruana")
+        await ctx.reply(data)
+
 
 async def setup(bot):
     await bot.add_cog(siege_commands(bot))
