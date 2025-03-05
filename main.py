@@ -26,8 +26,6 @@ user_level_xp_cooldown = {}
 last_command_time = {}
 bot_users_this_session = []
 
-class CustomCheckFailure(commands.CheckFailure):
-    pass
 
 async def triedcrime(ctx):
     userdata = await user_data(ctx.author.id, 'triedcrime')

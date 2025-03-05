@@ -513,6 +513,44 @@ class moneycommands(commands.Cog):
             view=view
         )
 
+
+    @commands.command()
+    async def minesv2(self, ctx: discord.ext.commands.Context, amt: int):
+        # common checks to ensure no sneaky business
+        userdata = user_data(ctx.author.id)
+        if not userdata:
+            await ctx.reply("Failed to get user data.")
+            return
+        if amt < 50:
+            await ctx.reply("You must bet more than 50 coins.")
+        if userdata['walletAmt'] < amt:
+            await ctx.reply("You can't afford this bet.")
+        # take away users money so they cant play a game, and then spend money before game finishes (escrow sorta thing)
+        userdata['walletAmt'] = userdata['walletAmt'] - amt
+        bombCount = 2
+        # create all 9 buttons that bombs could be on
+        tiles = [Button(style=discord.ButtonStyle.primary, label="?", custom_id=f"tile_{i}") for i in range(9)]
+        # red exit button
+        exit_button = Button(label="Finish ", style=discord.ButtonStyle.red, custom_id="exit")
+        # tiles to ensure no insane silly business
+        blankTile = [Button(style=discord.ButtonStyle.gray, label="Empty", custom_id=f"blank_{i}") for i in range(12)]
+        view = View()
+        i = 0
+        for tile in tiles:
+            view.add_item(tile)
+            i = i + 1
+            if i == 3 or i == 6 or i == 9:
+                if i == 9:
+                    view.add_item(exit_button)
+                else:
+                    thattile = blankTile.pop(0)
+                    view.add_item(thattile)
+                    thattile.disabled = True
+                thattile = blankTile.pop(0)
+                view.add_item(thattile)
+                thattile.disabled = True
+
+
     @commands.command()
     async def casinoMoney(self, ctx):
         value = await get_casino_money()
