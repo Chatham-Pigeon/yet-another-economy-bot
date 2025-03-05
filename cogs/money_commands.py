@@ -516,6 +516,33 @@ class moneycommands(commands.Cog):
 
     @commands.command()
     async def minesv2(self, ctx: discord.ext.commands.Context, amt: int):
+        tileIndexs = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        bomb_locations = [tileIndexs.pop(random.randint(0, tileIndexs.count())), tileIndexs.pop(random.randint(0, tileIndexs.count()))]
+        # function for interacting with mine
+
+        async def mines_interaction(interaction: discord.Interaction):
+            if interaction.user.id != ctx.author.id:
+                await ctx.send("This isn't your mines game.", ephemeral=True)
+                return
+            tile_id = interaction.data['custom_id'][5]
+            if bomb_locations.__contains__(tile_id):
+                for i in tiles:
+                    i.disabled = True
+                tiles[bomb_locations[0]].label = "💣"
+                await interaction.edit_original_response(content="Game over! You hit a bomb...", )
+                return
+
+
+
+
+
+
+        #function with exiting the game
+        async def exit_game_buton(interaction: discord.Interaction):
+            pass
+
+
+        # ACTUAL START OF COMMAND
         # common checks to ensure no sneaky business
         userdata = user_data(ctx.author.id)
         if not userdata:
@@ -527,28 +554,41 @@ class moneycommands(commands.Cog):
             await ctx.reply("You can't afford this bet.")
         # take away users money so they cant play a game, and then spend money before game finishes (escrow sorta thing)
         userdata['walletAmt'] = userdata['walletAmt'] - amt
-        bombCount = 2
+
+
         # create all 9 buttons that bombs could be on
         tiles = [Button(style=discord.ButtonStyle.primary, label="?", custom_id=f"tile_{i}") for i in range(9)]
+        for i in tiles:
+            i.callback = mines_interaction
         # red exit button
         exit_button = Button(label="Finish ", style=discord.ButtonStyle.red, custom_id="exit")
-        # tiles to ensure no insane silly business
-        blankTile = [Button(style=discord.ButtonStyle.gray, label="Empty", custom_id=f"blank_{i}") for i in range(12)]
+        exit_button.callback = exit_game_buton
+        # blank tile to force the grid to be a 3x3 (on desktop, i hate mobile users)
+        blank_tile = [Button(style=discord.ButtonStyle.gray, label="Empty", custom_id=f"blank_{i}") for i in range(12)]
         view = View()
         i = 0
         for tile in tiles:
+            # add first tile
             view.add_item(tile)
             i = i + 1
+            # if button index is 3 6 or 9 ( the side of the 3x3 playable grid)
+            #buttons added in this if statement are placed AFTER a grid button is added, meaning the blank tile will be on the 4th (and 5th) index of each row
             if i == 3 or i == 6 or i == 9:
+                # if its the bottom one
                 if i == 9:
+                    # add exit button insidead of bank tile
                     view.add_item(exit_button)
                 else:
-                    thattile = blankTile.pop(0)
+                    # if its not bottom right add blank time
+                    thattile = blank_tile.pop(0)
                     view.add_item(thattile)
                     thattile.disabled = True
-                thattile = blankTile.pop(0)
+                # add another blank tile after that (because max button layout is 5 accross, i want grid to be 3x3)
+                thattile = blank_tile.pop(0)
                 view.add_item(thattile)
                 thattile.disabled = True
+
+
 
 
     @commands.command()
