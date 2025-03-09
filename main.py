@@ -259,8 +259,6 @@ async def main():
     #cursor.execute("CREATE TABLE IF NOT EXISTS USERDATA(userID BIGINT, walletAmt INT, bankAmt INT, bankMax INT, boughtItems varchar(255), currentXP INT, userLevel INT)")
     #cursor.execute("CREATE TABLE IF NOT EXISTS SHOPITEMS(displayname varchar(255), itemid varchar(255), cost INT, description varchar(255), emoji varchar(255))")
 
-
-
 asyncio.run(main())
 config.CONFIG_BOT = bot
 bot.run(DISCORD_TOKEN)

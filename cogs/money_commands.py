@@ -639,7 +639,5 @@ class moneycommands(commands.Cog):
         view.add_item(noButton)
         await ctx.reply(content=f"Hey <@{victim.id}>!, <@{ctx.author.id}> wants to play a game of Rock, Paper, Scissors against you for a bet of {amt} coins, do you want to?", view=view)
 
-
-
 async def setup(bot):
     await bot.add_cog(moneycommands(bot))
