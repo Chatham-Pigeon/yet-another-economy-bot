@@ -1,4 +1,5 @@
 import datetime
+from code import interact
 
 import discord
 from discord.ext import commands
@@ -516,35 +517,45 @@ class moneycommands(commands.Cog):
 
     @commands.command()
     async def minesv2(self, ctx: discord.ext.commands.Context, amt: int):
-        tileIndexs = [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        bomb_locations = [tileIndexs.pop(random.randint(0, tileIndexs.count())), tileIndexs.pop(random.randint(0, tileIndexs.count()))]
-        # function for interacting with mine
+        tileIndexs = [0, 1, 2, 3, 4, 5, 6, 7, 8]
+        tileIndexsCopy = tileIndexs
+        bomb_locations: list = [tileIndexsCopy.pop(random.randint(0, len(tileIndexsCopy) - 1)), tileIndexsCopy.pop(random.randint(0, len(tileIndexsCopy) - 1))]
 
+        # function for interacting with mine
         async def mines_interaction(interaction: discord.Interaction):
+            nonlocal profit
             if interaction.user.id != ctx.author.id:
-                await ctx.send("This isn't your mines game.", ephemeral=True)
+                await interaction.response.send_message("This isn't your mines game", ephemeral=True)
                 return
-            tile_id = interaction.data['custom_id'][5]
-            if bomb_locations.__contains__(tile_id):
+            tile_id = int(interaction.data['custom_id'][5])
+            if tile_id in bomb_locations:
                 for i in tiles:
                     i.disabled = True
                 tiles[bomb_locations[0]].label = "💣"
-                await interaction.edit_original_response(content="Game over! You hit a bomb...", )
+                tiles[bomb_locations[1]].label = "💣"
+                exit_button.disabled =  True
+                await interaction.response.edit_message(content="Game over! You hit a bomb...", view=view)
                 return
-
-
-
-
-
+            profit = round(profit + amt / 7, 0)
+            tiles[tile_id].label = "✔"
+            tiles[tile_id].style = discord.ButtonStyle.green
+            tiles[tile_id].disabled = True
+            await interaction.response.edit_message(content=f"Click the safe tiles and avoid the bombs! +{round(amt / 7, 2)} each safe tile. (rounded down) \n Estimated Profit: {profit}",view=view)
 
         #function with exiting the game
         async def exit_game_buton(interaction: discord.Interaction):
-            pass
+            for i in tiles:
+                i.disabled = True
+                i.style = discord.ButtonStyle.success
+            tiles[bomb_locations[0]].label = "💣"
+            tiles[bomb_locations[1]].label = "💣"
+            exit_button.disabled = True
+            await interaction.response.edit_message(f"Game over! You exited early and profited an extra {profit - 50} coins.", view=veiw)
 
 
         # ACTUAL START OF COMMAND
         # common checks to ensure no sneaky business
-        userdata = user_data(ctx.author.id)
+        userdata = await user_data(ctx.author.id)
         if not userdata:
             await ctx.reply("Failed to get user data.")
             return
@@ -554,8 +565,8 @@ class moneycommands(commands.Cog):
             await ctx.reply("You can't afford this bet.")
         # take away users money so they cant play a game, and then spend money before game finishes (escrow sorta thing)
         userdata['walletAmt'] = userdata['walletAmt'] - amt
-
-
+        # TODO: await update_user_data(userdata)
+        profit = amt
         # create all 9 buttons that bombs could be on
         tiles = [Button(style=discord.ButtonStyle.primary, label="?", custom_id=f"tile_{i}") for i in range(9)]
         for i in tiles:
@@ -587,9 +598,8 @@ class moneycommands(commands.Cog):
                 thattile = blank_tile.pop(0)
                 view.add_item(thattile)
                 thattile.disabled = True
-
-
-
+        await ctx.reply("Welcome to Mines, click the safe tiles and avoid the bombs! +0.12x profit each safe tile. (rounded down)", view=view)
+        await ctx.reply(bomb_locations)
 
     @commands.command()
     async def casinoMoney(self, ctx):
