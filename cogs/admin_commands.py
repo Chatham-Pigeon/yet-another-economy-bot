@@ -3,7 +3,6 @@ import datetime
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-from webtest import Hidden
 
 import config
 from helperfunctions import isadmin, dointerest, get_db_connection, createView, user_data, update_user_data
