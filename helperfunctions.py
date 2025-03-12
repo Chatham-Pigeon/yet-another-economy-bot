@@ -68,7 +68,7 @@ async def get_db_connection(wherestarted=None):
                 msg = f"<@{config.USER_CHATHAM}> db failed to reconnect but didnt cause an exception: **{wherestarted}**"
         except:
             msg = f" <@{config.USER_CHATHAM}> DB CONNECTION FAILED: **{wherestarted}**"
-    if config.DEBUG == True:
+    if config.DEBUG:
         print(msg)
         await config.CONFIG_BOT.get_channel(config.CHANNEL_LOG).send(f":water: :water: water: {msg}")
     return items

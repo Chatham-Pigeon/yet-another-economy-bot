@@ -415,7 +415,7 @@ class moneycommands(commands.Cog):
                 exit_button.disabled = True
                 await interaction.response.edit_message(content=f"Game over! You found all the safe tiles. you got an extra {round(profit - 50, 0)} coins!", view=view)
                 userdata['walletAmt'] = userdata['walletAmt'] + profit
-                update_user_data(userdata)
+                await update_user_data(userdata)
                 return
             await interaction.response.edit_message(content=f"Click the safe tiles and avoid the bombs! +{round(amt / 7, 2)}~ each safe tile. \n Estimated Profit: {round(profit, 0)}", view=view)
 
@@ -431,7 +431,7 @@ class moneycommands(commands.Cog):
             exit_button.disabled = True
             await interaction.response.edit_message(content=f"Game over! You exited early and profited an extra {profit - 50} coins.", view=view)
             userdata['walletAmt'] = userdata['walletAmt'] + profit
-            update_user_data(userdata)
+            await update_user_data(userdata)
 
 
         # ACTUAL START OF COMMAND
@@ -483,7 +483,6 @@ class moneycommands(commands.Cog):
                 view.add_item(thattile)
                 thattile.disabled = True
         await ctx.reply(f"Welcome to Mines, click the safe tiles and avoid the bombs! +{round(amt / 7, 2)}~ profit each safe tile. \n There are two bombs.", view=view)
-        await ctx.reply(bomb_locations)
 
     @commands.command()
     async def casinoMoney(self, ctx):

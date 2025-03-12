@@ -321,7 +321,35 @@ class admincommands(commands.Cog):
         view_items['disconnect'].callback = disconnectUser
         view_items['serverMute'].callback = changeMuteState
         await ctx.reply(embed=embed, view=view)
-
+    @commands.command()
+    async def remindme(self, ctx, time: str, *, message):
+        """
+        okay so i think im going to store these as a dictionary being userID: ['time', 'content', 'channel']
+        i guess i gotta figure out how to do one of those forever tasks
+        lotta fuckin cpu usage though..?
+        gotta store in a cache!
+        load up: load all reminders into pre said dict
+        when new reminder created add to the cache AND the db
+        crash ??? idk should be fine i guess since no data should be saved only in the cache
+        if time goes delete from cache and db
+        on ready: check if any reminders happened when it was offline to avoid bot just forgoring
+        """
+        time = time.replace("<", "")
+        time = time.replace("<", "")
+        time = time.replace("t", "")
+        time = time.replace(":", "")
+        await ctx.reply(time)
+        try:
+            timeNum: int = int(time)
+        except:
+            await ctx.reply(f"Please enter a timestamp (number) u silly ")
+            return
+        db, cursor = await get_db_connection(f'remindme,,')
+        cursor.execute("SELECT ReminderCount FROM GLOBALVARIABLES")
+        globalCount = cursor.fetchone()
+        cursor.execute("UPDATE GLOBALVARIABLES SET ReminderCount = ReminderCount + 1")
+        db.commit()
+        await ctx.reply(f'{globalCount}: New reminder set for <t:{timeNum}> "{message}"')
 
 
 
